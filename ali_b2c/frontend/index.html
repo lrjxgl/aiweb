@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>B2C商城</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch('/backend/api.php')
+                .then(response => response.json())
+                .then(data => {
+                    const productsContainer = document.getElementById('products');
+                    data.forEach(product => {
+                        const productDiv = document.createElement('div');
+                        productDiv.textContent = `${product.name} - $${product.price}`;
+
+                        // 新增：添加到购物车按钮
+                        const addToCartButton = document.createElement('button');
+                        addToCartButton.textContent = '加入购物车';
+                        addToCartButton.onclick = () => {
+                            fetch('/backend/add_to_cart.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ product_id: product.id, quantity: 1 })
+                            }).then(response => response.text())
+                              .then(message => alert(message));
+                        };
+                        productDiv.appendChild(addToCartButton);
+
+                        productsContainer.appendChild(productDiv);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    </script>
+</head>
+<body>
+    <h1>B2C商城</h1>
+    <div id="products"></div>
+</body>
+</html>
