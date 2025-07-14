@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>乡村老雷的节拍器</title>
-  <script src="/js/vue3.js"></script>
+  <script src="../../js/vue3.js"></script>
   <style>
     * {
       margin: 0;
@@ -450,8 +450,8 @@
         
         // 初始化声音
         const initSounds = async () => {
-          clickSoundBuffer = await loadSound('/asset/Drum-Kit-JS/snare.wav');
-          strongClickSoundBuffer = await loadSound('/asset/Drum-Kit-JS/kick.wav');
+          clickSoundBuffer = await loadSound('../../asset/Drum-Kit-JS/snare.wav');
+          strongClickSoundBuffer = await loadSound('../../asset/Drum-Kit-JS/kick.wav');
         };
         
         initSounds();
