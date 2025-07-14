@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专业鼓机 - 多小节节奏编辑器</title>
+    <script src="/js/vue3.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4a00e0;
+            --secondary: #8e2de2;
+            --accent: #00c9ff;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --light: #f5f5f5;
+            --gray: #2d2d2d;
+            --success: #00c853;
+            --warning: #ffab00;
+            --danger: #ff1744;
+            --bar-color-1: #4a00e0;
+            --bar-color-2: #8e2de2;
+            --bar-color-3: #00c9ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background: rgba(25, 25, 35, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+            border: 1px solid rgba(100, 100, 200, 0.2);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--accent);
+        }
+        
+        h1 {
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, var(--accent), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            color: #aaa;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+        
+        .panel {
+            background: rgba(40, 40, 60, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(100, 100, 200, 0.15);
+        }
+        
+        .panel-title {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+        
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .control-group label {
+            font-weight: bold;
+            min-width: 140px;
+            color: var(--accent);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-group input {
+            padding: 14px 18px;
+            border: 2px solid #4a4a8a;
+            border-radius: 10px;
+            background: rgba(20, 20, 40, 0.8);
+            color: var(--light);
+            font-size: 1.2rem;
+            width: 120px;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .control-group input:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 201, 255, 0.3);
+        }
+        
+        button {
+            padding: 14px 25px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            min-width: 140px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        button:hover:before {
+            left: 100%;
+        }
+        
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(to right, #5a1aee, #9e42ff);
+        }
+        
+        button:active {
+            transform: translateY(2px);
+        }
+        
+        button:disabled {
+            background: #555;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .active-play-btn {
+            background: linear-gradient(to right, var(--success), #00a152);
+        }
+        
+        .status {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 25px;
+            font-size: 1.2rem;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            border-left: 4px solid var(--accent);
+        }
+        
+        .editor-container {
+            background: rgba(40, 40, 60, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(100, 100, 200, 0.15);
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #4a4a8a;
+        }
+        
+        .editor-header h2 {
+            color: var(--accent);
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .instrument-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .instrument-name {
+            width: 120px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(0, 201, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+        
+        .steps-container {
+            display: flex;
+            flex-grow: 1;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            margin-right: 6px;
+            border: 2px solid #4a4a8a;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            position: relative;
+            transition: all 0.2s;
+            background: rgba(20, 20, 40, 0.8);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .step:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0, 201, 255, 0.7);
+        }
+        
+        .step.active {
+            background: linear-gradient(to bottom, var(--success), #009624);
+            border-color: #00e676;
+            box-shadow: 0 0 15px rgba(0, 200, 83, 0.7);
+        }
+        
+        .beat-marker::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--warning);
+            border-radius: 2px;
+        }
+        
+        .active-step {
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+            z-index: 10;
+            transform: scale(1.15);
+            border-color: var(--accent);
+        }
+        
+        .bar-marker {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .visualizer {
+            width: 100%;
+            height: 150px;
+            margin: 25px 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+        }
+        
+        .bar {
+            width: 12px;
+            background: linear-gradient(to top, var(--accent), var(--secondary));
+            border-radius: 6px 6px 0 0;
+            transition: height 0.1s;
+        }
+        
+        .highlight {
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .preset-card {
+            background: rgba(50, 50, 70, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .preset-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            border-color: var(--accent);
+        }
+        
+        .preset-card h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .preset-card p {
+            color: #ccc;
+            margin-bottom: 15px;
+            min-height: 60px;
+        }
+        
+        .preset-card .tags {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: rgba(0, 201, 255, 0.2);
+            color: var(--accent);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .bars-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(30, 30, 50, 0.7);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .bar-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(0, 201, 255, 0.2);
+            z-index: -1;
+            transition: width 0.3s ease;
+        }
+        
+        .position-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 5px;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            z-index: 5;
+        }
+        
+        .presets-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1200px;
+            max-height: 80vh;
+            background: rgba(30, 30, 50, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            z-index: 100;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+            overflow-y: auto;
+            border: 2px solid var(--accent);
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 99;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--danger);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        
+        .visualization-container {
+            position: relative;
+            width: 100%;
+            height: 5px;
+            background: rgba(100, 100, 150, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-content {
+            background: rgba(40, 40, 60, 1);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--accent);
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .export-section {
+            background: rgba(40, 40, 60, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--success), var(--accent));
+            border-radius: 8px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .download-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .download-link {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .download-link:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(to right, #5a1aee, #9e42ff);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .control-group {
+                gap: 10px;
+            }
+            
+            button {
+                padding: 12px 15px;
+                min-width: 120px;
+                font-size: 1rem;
+            }
+            
+            .step {
+                width: 35px;
+                height: 35px;
+            }
+        }
+		textarea, select, input {
+		    width: 100%;
+		    padding: 12px 15px;
+		    border-radius: 10px;
+		    border: 2px solid #4a235a;
+		    background: rgba(30, 30, 40, 0.8);
+		    color: white;
+		    font-size: 1rem;
+		    transition: border-color 0.3s;
+		}
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading-overlay" v-if="!audioInitialized">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <h3>初始化音频系统...</h3>
+                <p>首次使用需要加载音源，请稍候</p>
+                <button @click="initializeAudio">手动初始化</button>
+            </div>
+        </div>
+        
+        <div class="container">
+            <header>
+                <h1><i class="fas fa-drum"></i> 专业鼓机</h1>
+                <p class="subtitle">多小节节奏编辑器 - 自由定义您的节奏模式</p>
+            </header>
+           
+            <div class="panel">
+                <div class="control-group">
+                    <label for="bpm"><i class="fas fa-tachometer-alt"></i> BPM 设置:</label>
+                    <input type="number" id="bpm" v-model.number="currentBPM" min="40" max="200">
+                    
+                    <button @click="updateBPM"><i class="fas fa-sync-alt"></i> 更新BPM</button>
+                    <button @click="togglePlayback" :class="{ 'active-play-btn': isPlaying }">
+                        <i :class="isPlaying ? 'fas fa-pause' : 'fas fa-play'"></i> {{ isPlaying ? '暂停' : '播放' }}
+                    </button>
+                    <button @click="stopPlayback" :disabled="!isPlaying"><i class="fas fa-stop"></i> 停止</button>
+                </div>
+                <div class="control-group">
+                    <label for="instrument-name">鼓机</label>
+                    <select id="instrument" v-model="activeSound">
+                        <option v-for="(inst, index) in soundList" :key="index" :value="index">{{ inst.name }}</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label><i class="fas fa-music"></i> 小节数量:</label>
+                    <div class="bars-control">
+                        <button @click="decrementBars" :disabled="bars <= 1"><i class="fas fa-minus"></i></button>
+                        <span class="highlight" style="font-size: 1.3rem; min-width: 40px; text-align: center;">{{ bars }}</span>
+                        <button @click="incrementBars"><i class="fas fa-plus"></i></button>
+                    </div>
+                    
+                    <button @click="clearPattern"><i class="fas fa-trash-alt"></i> 清除模式</button>
+                    <button @click="generateRandomPattern"><i class="fas fa-random"></i> 随机生成</button>
+                    <button @click="showPresetLibrary = true"><i class="fas fa-list"></i> 节奏库</button>
+                    <button @click="testAllSounds"><i class="fas fa-volume-up"></i> 测试音效</button>
+                </div>
+                
+                <div class="status">
+                    <i :class="statusIcon"></i> {{ statusMessage }}
+                </div>
+                
+                <div class="visualizer">
+                    <div v-for="(bar, index) in visualizerBars" :key="index" class="bar" :style="{ height: bar.height + '%' }"></div>
+                </div>
+                
+                <div class="visualization-container">
+                    <div class="bar-indicator" :style="{ width: positionIndicator + '%' }"></div>
+                </div>
+            </div>
+            
+            <div class="editor-container">
+                <div class="editor-header">
+                    <h2><i class="fas fa-edit"></i> 节奏编辑器 ({{ bars }} 小节)</h2>
+                    <div class="bpm-display">当前 BPM: <span class="highlight">{{ currentBPM }}</span></div>
+                </div>
+                
+                <div class="instrument-row">
+                    <div class="instrument-name">节拍</div>
+                    <div class="steps-container">
+                        <div v-for="(step, index) in totalSteps" :key="index" class="step" :class="{ 'beat-marker': index % 4 === 0 }">
+                            {{ getStepLabel(index) }}
+                            <div v-if="index % 16 === 0" class="bar-marker">小节 {{ Math.floor(index/16) + 1 }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div v-for="(instrument, name) in instruments" :key="name" class="instrument-row">
+                    <div class="instrument-name">{{ name }}</div>
+                    <div class="steps-container">
+                        <div 
+                            v-for="(step, index) in currentPattern[name]" 
+                            :key="index" 
+                            class="step" 
+                            :class="{ 
+                                active: step, 
+                                'active-step': isPlaying && currentStep === index,
+                                'beat-marker': index % 4 === 0
+                            }"
+                            @click="toggleStep(name, index)"
+                        >
+                            {{ step ? '●' : '' }}
+                            <div v-if="index % 16 === 0" class="bar-marker">小节 {{ Math.floor(index/16) + 1 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           
+            <div class="export-section">
+                <h2 class="panel-title"><i class="fas fa-file-export"></i> 音频导出</h2>
+                <div class="control-group">
+                    <label for="exportDuration"><i class="fas fa-clock"></i> 导出时长(秒):</label>
+                    <input style="height:40px;line-height:40px; text-align:center;" type="number" id="exportDuration" v-model.number="exportDuration" min="5" max="600">
+                    <button @click="exportToWAV"><i class="fas fa-file-audio"></i> 导出WAV音频</button>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" :style="{ width: exportProgress + '%' }"></div>
+                </div>
+                
+                <div class="status">
+                    <i :class="exportIcon"></i> {{ exportStatus }}
+                </div>
+                
+                <div class="download-container" v-if="downloadLink">
+                    <a :href="downloadLink" class="download-link" :download="exportFileName">
+                        <i class="fas fa-download"></i> 下载WAV文件 ({{ exportDuration }}秒)
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>专业鼓机 | 多小节节奏编辑器 | Vue 3 实现 | &copy; 2023 音乐科技</p>
+        </footer>
+        
+        <!-- 预设库弹窗 -->
+        <div class="overlay" v-if="showPresetLibrary" @click="showPresetLibrary = false"></div>
+        <div class="presets-panel" v-if="showPresetLibrary">
+            <div class="close-btn" @click="showPresetLibrary = false">
+                <i class="fas fa-times"></i>
+            </div>
+            <h2 class="panel-title">
+                <i class="fas fa-sliders-h"></i> 预设节奏库
+            </h2>
+            <div class="preset-grid">
+                <div v-for="preset in drumPresets" :key="preset.id" class="preset-card" @click="loadPreset(preset.id)">
+                    <h3><i class="fas fa-music"></i> {{ preset.name }}</h3>
+                    <p>{{ preset.description }}</p>
+                    <div class="tags">
+                        <span v-for="tag in preset.tags" :key="tag" class="tag">{{ tag }}</span>
+                    </div>
+                    <div class="bpm">推荐 BPM: <span class="highlight">{{ preset.bpm }}</span></div>
+                    <div class="bpm">小节: <span class="highlight">{{ preset.bars }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
+        
+        // 预设节奏数据（多小节示例）
+        const DRUM_PRESETS = [
+            {
+                id: "rock-4bars",
+                name: "摇滚节奏 (4小节)",
+                description: "4小节摇滚节奏，包含前奏、主歌和过渡部分",
+                bpm: 120,
+                bars: 4,
+                tags: ["摇滚", "强力", "4小节"],
+                pattern: {
+                    kick:  [1,0,0,0,1,0,0,1,1,0,0,0,1,0,0,0, 1,0,0,0,1,0,0,0,1,0,1,0,1,0,0,1, 1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0, 1,0,0,0,1,0,0,0,1,0,1,0,1,0,0,1],
+                    snare: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0, 0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0, 0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0, 0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],
+                    hihat: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                    ride:  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                }
+            },
+            {
+                id: "electronic-2bars",
+                name: "电子节奏 (2小节)",
+                description: "2小节电子舞曲节奏，带复杂的踩镲和底鼓模式",
+                bpm: 128,
+                bars: 2,
+                tags: ["电子", "EDM", "2小节"],
+                pattern: {
+                    kick:  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+                    snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    hihat: [0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0, 0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0],
+                    clap:  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]
+                }
+            },
+            {
+                id: "jazz-3bars",
+                name: "爵士节奏 (3小节)",
+                description: "3小节爵士节奏，带有摇摆感的踩镲和即兴的鼓点",
+                bpm: 90,
+                bars: 3,
+                tags: ["爵士", "摇摆", "3小节"],
+                pattern: {
+                    kick:  [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1, 1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1, 1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
+                    snare: [0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0, 0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0, 0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0],
+                    ride:  [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0, 1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0, 1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]
+                }
+            },
+            {
+                id: "hiphop-4bars",
+                name: "嘻哈节奏 (4小节)",
+                description: "4小节嘻哈节奏，带有沉重的底鼓和拍手音效",
+                bpm: 85,
+                bars: 4,
+                tags: ["嘻哈", "说唱", "4小节"],
+                pattern: {
+                    kick:  [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1, 1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1, 1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1, 1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1],
+                    snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    clap:  [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+                    hihat: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1, 0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1, 0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1, 0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1]
+                }
+            }
+        ];
+        
+        // 使用Vue 3重构的鼓机应用
+        createApp({
+            setup() {
+                // 状态管理
+                const audioContext = ref(null);
+                const sampleBuffers = ref({});
+                const isPlaying = ref(false);
+                const currentStep = ref(0);
+                const timerId = ref(null);
+                const currentBPM = ref(90);
+                const bars = ref(2);
+                const audioInitialized = ref(false);
+                const visualizerBars = ref(Array(64).fill().map(() => ({ height: 2 })));
+                const showPresetLibrary = ref(false);
+                const exportDuration = ref(30);
+                const exportStatus = ref("准备导出高质量WAV音频文件...");
+                const exportIcon = ref("fas fa-info-circle");
+                const exportProgress = ref(0);
+                const downloadLink = ref("");
+                const statusMessage = ref("准备就绪，点击播放开始");
+                const statusIcon = ref("fas fa-info-circle");
+                const positionIndicator = ref(0);
+                const nextNoteTime = ref(0);
+                const exportFileName = ref("");
+                const soundList={
+					 
+					"DrumKit":{
+						name:"DrumKit",
+						baseUrl:"/asset/Drum-Kit-JS/"
+					}
+				}
+				const activeSound=ref('DrumKit');
+                // 计算总步数（16步/小节）
+                const totalSteps = computed(() => bars.value * 16);
+                
+                // 乐器定义
+                const instruments = reactive({
+                    kick: { name: "底鼓" },
+                    snare: { name: "军鼓" },
+                    hihat: { name: "踩镲" },
+                    clap: { name: "拍手" },
+                    openhat: { name: "开镲" },
+                    ride: { name: "叮叮镲" },
+                    tom: { name: "通鼓" }
+                });
+                
+                // 当前节奏模式（多小节）
+                const currentPattern = reactive({
+                    kick: Array(totalSteps.value).fill(0),
+                    snare: Array(totalSteps.value).fill(0),
+                    hihat: Array(totalSteps.value).fill(0),
+                    clap: Array(totalSteps.value).fill(0),
+                    openhat: Array(totalSteps.value).fill(0),
+                    ride: Array(totalSteps.value).fill(0),
+                    tom: Array(totalSteps.value).fill(0)
+                });
+                
+                // 预设节奏
+                const drumPresets = ref(DRUM_PRESETS);
+                
+                // 音源URL
+                const SAMPLE_URLS = {
+                    kick: 'kick.wav',
+                    snare: 'snare.wav',
+                    hihat: 'hihat.wav',
+                    clap: 'clap.wav',
+                    openhat: 'openhat.wav',
+                    ride: 'ride.wav',
+                    tom: 'tom.wav',
+                    tink: 'tink.wav',
+                    boom: 'boom.wav'
+                };
+                
+                // 获取步骤标签
+                const getStepLabel = (index) => {
+                    const stepInBar = index % 16;
+                    if (stepInBar % 4 === 0) {
+                        return Math.floor(stepInBar / 4) + 1;
+                    }
+                    return "+";
+                };
+                
+                // 增加小节数量
+                const incrementBars = () => {
+                    if (bars.value < 8) {
+                        bars.value++;
+                        updatePatternLength();
+                    }
+                };
+                
+                // 减少小节数量
+                const decrementBars = () => {
+                    if (bars.value > 1) {
+                        bars.value--;
+                        updatePatternLength();
+                    }
+                };
+                
+                // 更新模式长度
+                const updatePatternLength = () => {
+                    for (const instrument of Object.keys(currentPattern)) {
+                        console.log(currentPattern[instrument]);
+                        const currentLength = currentPattern[instrument].length;
+                        const newLength = totalSteps.value;
+                        
+                        if (newLength > currentLength) {
+                            // 增加长度，填充0
+                            currentPattern[instrument] = [
+                                ...currentPattern[instrument],
+                                ...Array(newLength - currentLength).fill(0)
+                            ];
+                        } else if (newLength < currentLength) {
+                            // 减少长度，截取数组
+                            currentPattern[instrument] = currentPattern[instrument].slice(0, newLength);
+                        }
+                    }
+                };
+                
+                // 初始化音频
+                const initializeAudio = async () => {
+                    try {
+                        if (audioInitialized.value) return true;
+                        
+                        statusMessage.value = "正在初始化音频系统...";
+                        statusIcon.value = "fas fa-spinner fa-spin";
+                        
+                        // 创建音频上下文
+                        audioContext.value = new (window.AudioContext || window.webkitAudioContext)();
+                        
+                        // 加载所有采样
+                        statusMessage.value = "正在加载音源...";
+                        await loadAllSamples();
+                        
+                        audioInitialized.value = true;
+                        statusMessage.value = "音源加载完成，准备就绪！";
+                        statusIcon.value = "fas fa-check-circle";
+						console.log("音频初始化成功")
+                        return true;
+                    } catch (error) {
+                        console.error("音频初始化失败:", error);
+                        statusMessage.value = `音频初始化失败: ${error.message}`;
+                        statusIcon.value = "fas fa-exclamation-triangle";
+                        return false;
+                    }
+                };
+                
+                // 加载所有采样
+                const loadAllSamples = async () => {
+                    const loadingPromises = Object.entries(SAMPLE_URLS).map(async ([name, url]) => {
+                        try {
+                            //const response = await fetch(url, { mode: 'cors' });
+                             
+							const response = await fetch(soundList[activeSound.value].baseUrl+url, { mode: 'cors' });
+                            if (!response.ok) {
+                                throw new Error(`HTTP错误! 状态: ${response.status}`);
+                            }
+                            
+                            const arrayBuffer = await response.arrayBuffer();
+                            sampleBuffers.value[name] = await audioContext.value.decodeAudioData(arrayBuffer);
+                            return { name, success: true };
+                        } catch (error) {
+                            console.error(`加载音源 ${name} 失败:`, error);
+                            // 创建替代声音
+                            sampleBuffers.value[name] = createFallbackSound(name);
+                            return { name, success: false, error };
+                        }
+                    });
+                    
+                    const results = await Promise.all(loadingPromises);
+                    const failedSamples = results.filter(r => !r.success);
+                    
+                    if (failedSamples.length > 0) {
+                        const failedNames = failedSamples.map(r => r.name).join(', ');
+                        statusMessage.value += ` (部分音源加载失败: ${failedNames}, 已使用替代声音)`;
+                    }
+                };
+                
+                // 创建替代声音（当采样加载失败时使用）
+                const createFallbackSound = (type) => {
+                    const buffer = audioContext.value.createBuffer(1, audioContext.value.sampleRate * 0.5, audioContext.value.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    
+                    for (let i = 0; i < data.length; i++) {
+                        switch(type) {
+                            case 'kick':
+                                data[i] = Math.sin(i / 20) * Math.pow(1 - i / data.length, 3);
+                                break;
+                            case 'snare':
+                            case 'clap':
+                                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / (data.length * 0.5), 2);
+                                break;
+                            case 'hihat':
+                            case 'openhat':
+                            case 'ride':
+                                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / (data.length * 0.1), 4);
+                                break;
+                            case 'tom':
+                                data[i] = Math.sin(i / 30) * Math.pow(1 - i / data.length, 2);
+                                break;
+                            default:
+                                data[i] = Math.random() * 2 - 1;
+                        }
+                    }
+                    
+                    return buffer;
+                };
+                
+                // 播放采样
+                const playSample = (name, time = audioContext.value.currentTime) => {
+                    if (!sampleBuffers.value[name] || !audioContext.value) return;
+                    
+                    try {
+                        const source = audioContext.value.createBufferSource();
+                        source.buffer = sampleBuffers.value[name];
+                        
+                        // 创建增益节点控制音量
+                        const gainNode = audioContext.value.createGain();
+                        
+                        // 设置不同乐器的音量
+                        switch(name) {
+                            case 'kick': gainNode.gain.value = 1.0; break;
+                            case 'snare': gainNode.gain.value = 0.8; break;
+                            case 'hihat': gainNode.gain.value = 0.6; break;
+                            case 'clap': gainNode.gain.value = 0.7; break;
+                            case 'openhat': gainNode.gain.value = 0.7; break;
+                            case 'ride': gainNode.gain.value = 0.5; break;
+                            case 'tom': gainNode.gain.value = 0.7; break;
+                            default: gainNode.gain.value = 0.7;
+                        }
+                        
+                        source.connect(gainNode);
+                        gainNode.connect(audioContext.value.destination);
+                        source.start(time);
+                        
+                        // 自动断开连接以避免内存泄漏
+                        source.onended = () => {
+                            try {
+                                source.disconnect();
+                                gainNode.disconnect();
+                            } catch (e) {
+                                console.log("清理资源时出错:", e);
+                            }
+                        };
+                    } catch (error) {
+                        console.error("播放音效出错:", error);
+                    }
+                };
+                
+                // 切换步骤状态
+                const toggleStep = (instrument, stepIndex) => {
+                    currentPattern[instrument][stepIndex] = currentPattern[instrument][stepIndex] ? 0 : 1;
+                    
+                    // 预览声音
+                    if (currentPattern[instrument][stepIndex]) {
+                        playSample(instrument);
+                    }
+                };
+                
+                // 开始播放
+                const startPlayback = () => {
+                    if (isPlaying.value) return;
+                    
+                    isPlaying.value = true;
+                    currentStep.value = 0;
+                    nextNoteTime.value = audioContext.value.currentTime + 0.1; // 小延迟
+                    
+                    statusMessage.value = `播放中 (BPM: ${currentBPM.value})`;
+                    statusIcon.value = "fas fa-play-circle";
+                    
+                    // 更新可视化效果
+                    updateVisualizer();
+                    
+                    // 计算每一步的时间间隔 (16分音符)
+                    const secondsPerBeat = 60 / currentBPM.value;
+                    const stepLength = secondsPerBeat / 4;
+                    
+                    function scheduler() {
+                        if (!isPlaying.value) return;
+                        
+                        // 播放当前步骤的所有激活音色
+                        for (const instrument of Object.keys(instruments)) {
+                            if (currentPattern[instrument][currentStep.value]) {
+                                playSample(instrument, nextNoteTime.value);
+                            }
+                        }
+                        
+                        // 更新位置指示器
+                        positionIndicator.value = (currentStep.value / totalSteps.value) * 100;
+                        
+                        currentStep.value = (currentStep.value + 1) % totalSteps.value;
+                        nextNoteTime.value += stepLength;
+                        
+                        // 使用精确的时间调度
+                        const currentTime = audioContext.value.currentTime;
+                        const delay = Math.max(0, nextNoteTime.value - currentTime);
+                        
+                        timerId.value = setTimeout(scheduler, delay * 1000);
+                    }
+                    
+                    scheduler();
+                };
+                
+                // 更新可视化效果
+                const updateVisualizer = () => {
+                    if (!isPlaying.value) return;
+                    
+                    // 随机更新一些条形高度
+                    for (let i = 0; i < visualizerBars.value.length; i++) {
+                        if (Math.random() > 0.7) {
+                            visualizerBars.value[i].height = 5 + Math.random() * 95;
+                        }
+                    }
+                    
+                    requestAnimationFrame(updateVisualizer);
+                };
+                
+                // 停止播放
+                const stopPlayback = () => {
+                    if (!isPlaying.value) return;
+                    
+                    isPlaying.value = false;
+                    clearTimeout(timerId.value);
+                    
+                    statusMessage.value = "已停止";
+                    statusIcon.value = "fas fa-stop-circle";
+                    positionIndicator.value = 0;
+                };
+                
+                // 切换播放状态
+                const togglePlayback = async () => {
+                    if (!audioInitialized.value) {
+                        const success = await initializeAudio();
+                        if (success) {
+                            startPlayback();
+                        }
+                    } else {
+                        if (isPlaying.value) {
+                            stopPlayback();
+                        } else {
+                            startPlayback();
+                        }
+                    }
+                };
+                
+                // 更新BPM
+                const updateBPM = () => {
+                    if (isNaN(currentBPM.value) || currentBPM.value < 40 || currentBPM.value > 200) {
+                        statusMessage.value = "BPM必须在40到200之间";
+                        statusIcon.value = "fas fa-exclamation-triangle";
+                        currentBPM.value = 90;
+                        return;
+                    }
+                    
+                    if (isPlaying.value) {
+                        // 如果正在播放，重新开始以应用新的BPM
+                        const wasPlaying = isPlaying.value;
+                        stopPlayback();
+                        if (wasPlaying) startPlayback();
+                    }
+                    
+                    statusMessage.value = `BPM已更新为 ${currentBPM.value}`;
+                    statusIcon.value = "fas fa-sync-alt";
+                };
+                
+                // 清除当前模式
+                const clearPattern = () => {
+                    if (confirm('确定要清除当前节奏模式吗? 所有编辑将被重置。')) {
+                        for (const instrument of Object.keys(currentPattern)) {
+                            currentPattern[instrument] = Array(totalSteps.value).fill(0);
+                        }
+                        statusMessage.value = "节奏模式已清除";
+                        statusIcon.value = "fas fa-trash-alt";
+                    }
+                };
+                
+                // 随机生成模式
+                const generateRandomPattern = () => {
+                    for (const instrument of Object.keys(currentPattern)) {
+                        for (let i = 0; i < totalSteps.value; i++) {
+                            // 不同乐器有不同的激活概率
+                            let probability = 0.15;
+                            if (instrument === 'hihat') probability = 0.4;
+                            if (instrument === 'kick' || instrument === 'snare') probability = 0.25;
+                            if (instrument === 'clap') probability = 0.2;
+                            
+                            currentPattern[instrument][i] = Math.random() < probability ? 1 : 0;
+                        }
+                    }
+                    statusMessage.value = "已生成随机节奏模式";
+                    statusIcon.value = "fas fa-random";
+                };
+                
+                // 加载指定预设
+                const loadPreset = (presetId) => {
+                    const preset = drumPresets.value.find(p => p.id === presetId);
+                    if (!preset) return;
+                    
+                    // 更新小节数量
+                    bars.value = preset.bars;
+                    updatePatternLength();
+                    
+                    // 应用预设
+                    for (const [instrument, pattern] of Object.entries(preset.pattern)) {
+                        if (currentPattern[instrument]) {
+                            currentPattern[instrument] = [...pattern];
+                        }
+                    }
+                    
+                    // 更新BPM
+                    currentBPM.value = preset.bpm;
+                    
+                    // 关闭预设库
+                    showPresetLibrary.value = false;
+                    
+                    statusMessage.value = `已加载预设: ${preset.name}`;
+                    statusIcon.value = "fas fa-check-circle";
+                };
+                
+                // 测试所有音效
+                const testAllSounds = () => {
+                    if (!audioInitialized.value) {
+                        statusMessage.value = "请先初始化音频系统";
+                        statusIcon.value = "fas fa-exclamation-triangle";
+                        return;
+                    }
+                    
+                    statusMessage.value = "正在测试所有音效...";
+                    statusIcon.value = "fas fa-volume-up";
+                    
+                    let delay = 0;
+                    for (const instrument of Object.keys(instruments)) {
+                        setTimeout(() => {
+                            playSample(instrument);
+                            statusMessage.value = `测试音效: ${instrument}`;
+                        }, delay * 300);
+                        delay++;
+                    }
+                    
+                    setTimeout(() => {
+                        statusMessage.value = "音效测试完成";
+                        statusIcon.value = "fas fa-check-circle";
+                    }, delay * 300);
+                };
+                
+                // 导出为WAV - 修复版
+                const exportToWAV = async () => {
+                    if (!audioInitialized.value) {
+                        const success = await initializeAudio();
+                        if (!success) {
+                            exportStatus.value = "音频系统初始化失败，无法导出";
+                            exportIcon.value = "fas fa-exclamation-triangle";
+                            return;
+                        }
+                    }
+                    
+                    const duration = parseInt(exportDuration.value);
+                    
+                    if (isNaN(duration) || duration < 5 || duration > 600) {
+                        exportStatus.value = "导出时长必须在5-600秒之间";
+                        exportIcon.value = "fas fa-exclamation-triangle";
+                        exportDuration.value = 30;
+                        return;
+                    }
+                    
+                    exportStatus.value = "正在准备导出...";
+                    exportIcon.value = "fas fa-spinner fa-spin";
+                    downloadLink.value = "";
+                    exportProgress.value = 10;
+                    
+                    try {
+                        // 在导出开始时固定当前模式和小节数
+                        const fixedBars = bars.value;
+                        const fixedPattern = JSON.parse(JSON.stringify(currentPattern)); // 深拷贝
+                        const fixedTotalSteps = fixedBars * 16;
+                        
+                        // 创建一个离线的音频上下文
+                        const sampleRate = 44100;
+                        const offlineContext = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
+                        
+                        // 加载所有采样到离线上下文
+                        exportStatus.value = "正在处理音源...";
+                        exportProgress.value = 20;
+                        
+                        const offlineBuffers = {};
+                        for (const [name, buffer] of Object.entries(sampleBuffers.value)) {
+                            const newBuffer = offlineContext.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+                            for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+                                newBuffer.getChannelData(channel).set(buffer.getChannelData(channel));
+                            }
+                            offlineBuffers[name] = newBuffer;
+                        }
+                        
+                        // 计算每一步的时间间隔 (16分音符)
+                        const secondsPerBeat = 60 / currentBPM.value;
+                        const stepLength = secondsPerBeat / 4;
+                        const totalSteps = Math.ceil(duration / stepLength);
+                        
+                        exportStatus.value = "正在生成节奏...";
+                        exportProgress.value = 40;
+                        
+                        // 渲染所有步骤
+                        for (let step = 0; step < totalSteps; step++) {
+                            const stepTime = step * stepLength;
+                            if (stepTime >= duration) break;
+                            
+                            // 使用固定模式数据
+                            for (const instrument of Object.keys(fixedPattern)) {
+                                // 确保乐器在fixedPattern中存在
+                                if (!fixedPattern.hasOwnProperty(instrument)) continue;
+                                
+                                const patternArray = fixedPattern[instrument];
+                                // 计算索引，确保在数组范围内
+                                const index = step % fixedTotalSteps;
+                                if (index < patternArray.length && patternArray[index]) {
+                                    const source = offlineContext.createBufferSource();
+                                    source.buffer = offlineBuffers[instrument];
+                                    
+                                    const gainNode = offlineContext.createGain();
+                                    switch(instrument) {
+                                        case 'kick': gainNode.gain.value = 1.0; break;
+                                        case 'snare': gainNode.gain.value = 0.8; break;
+                                        case 'hihat': gainNode.gain.value = 0.6; break;
+                                        case 'clap': gainNode.gain.value = 0.7; break;
+                                        case 'openhat': gainNode.gain.value = 0.7; break;
+                                        case 'ride': gainNode.gain.value = 0.5; break;
+                                        case 'tom': gainNode.gain.value = 0.7; break;
+                                        default: gainNode.gain.value = 0.7;
+                                    }
+                                    
+                                    source.connect(gainNode);
+                                    gainNode.connect(offlineContext.destination);
+                                    source.start(stepTime);
+                                }
+                            }
+                            
+                            // 更新进度
+                            if (step % 100 === 0) {
+                                exportProgress.value = 40 + (step / totalSteps * 40);
+                            }
+                        }
+                        
+                        // 开始渲染音频
+                        exportStatus.value = "正在渲染音频...";
+                        exportProgress.value = 80;
+                        
+                        const renderedBuffer = await offlineContext.startRendering();
+                        
+                        // 转换为WAV
+                        exportStatus.value = "正在生成WAV文件...";
+                        exportProgress.value = 90;
+                        
+                        const wavBlob = bufferToWav(renderedBuffer);
+                        
+                        // 创建下载链接
+                        const url = URL.createObjectURL(wavBlob);
+                        downloadLink.value = url;
+                        exportFileName.value = `drum-beat-${currentBPM.value}bpm-${fixedBars}bars-${duration}s.wav`;
+                        
+                        exportStatus.value = "WAV导出完成！点击下方链接下载";
+                        exportIcon.value = "fas fa-check-circle";
+                        exportProgress.value = 100;
+                        
+                    } catch (error) {
+                        console.error("导出失败:", error);
+                        exportStatus.value = `导出失败: ${error.message}`;
+                        exportIcon.value = "fas fa-exclamation-triangle";
+                    }
+                };
+                
+                // 将AudioBuffer转换为WAV格式
+                const bufferToWav = (buffer) => {
+                    const numOfChannels = buffer.numberOfChannels;
+                    const sampleRate = buffer.sampleRate;
+                    const length = buffer.length;
+                    
+                    // 创建WAV头部
+                    const header = createWavHeader(numOfChannels, sampleRate, length);
+                    
+                    // 合并通道数据
+                    const interleaved = new Float32Array(length * numOfChannels);
+                    for (let channel = 0; channel < numOfChannels; channel++) {
+                        const channelData = buffer.getChannelData(channel);
+                        for (let i = 0; i < length; i++) {
+                            interleaved[i * numOfChannels + channel] = channelData[i];
+                        }
+                    }
+                    
+                    // 转换为16位PCM
+                    const pcmData = new Int16Array(interleaved.length);
+                    for (let i = 0; i < interleaved.length; i++) {
+                        const s = Math.max(-1, Math.min(1, interleaved[i]));
+                        pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+                    
+                    // 创建WAV数据
+                    const wavData = new Uint8Array(header.length + pcmData.length * 2);
+                    wavData.set(header, 0);
+                    
+                    // 添加PCM数据
+                    const dataView = new DataView(wavData.buffer);
+                    let offset = header.length;
+                    for (let i = 0; i < pcmData.length; i++) {
+                        dataView.setInt16(offset, pcmData[i], true);
+                        offset += 2;
+                    }
+                    
+                    return new Blob([wavData], { type: 'audio/wav' });
+                };
+                
+                // 创建WAV头部
+                const createWavHeader = (numOfChannels, sampleRate, length) => {
+                    const byteRate = numOfChannels * sampleRate * 2; // 16位 = 2字节
+                    const blockAlign = numOfChannels * 2;
+                    const dataSize = length * numOfChannels * 2;
+                    
+                    const header = new Uint8Array(44);
+                    const data = new DataView(header.buffer);
+                    
+                    // RIFF标识
+                    writeString(data, 0, 'RIFF');
+                    data.setUint32(4, 36 + dataSize, true); // 文件总长度
+                    writeString(data, 8, 'WAVE');
+                    
+                    // fmt块
+                    writeString(data, 12, 'fmt ');
+                    data.setUint32(16, 16, true); // fmt块长度
+                    data.setUint16(20, 1, true); // PCM格式
+                    data.setUint16(22, numOfChannels, true); // 声道数
+                    data.setUint32(24, sampleRate, true); // 采样率
+                    data.setUint32(28, byteRate, true); // 字节率
+                    data.setUint16(32, blockAlign, true); // 块对齐
+                    data.setUint16(34, 16, true); // 位深度
+                    
+                    // data块
+                    writeString(data, 36, 'data');
+                    data.setUint32(40, dataSize, true); // 数据长度
+                    
+                    return header;
+                };
+                
+                // 辅助函数：将字符串写入DataView
+                const writeString = (dataView, offset, string) => {
+                    for (let i = 0; i < string.length; i++) {
+                        dataView.setUint8(offset + i, string.charCodeAt(i));
+                    }
+                };
+                
+                // 监听小节变化
+                watch(bars, () => {
+                    updatePatternLength();
+                });
+                watch(activeSound, (n,o) => {
+					console.log(n,o)
+                    audioInitialized.value = false;
+				 
+					initializeAudio()
+                });
+                // 初始化随机模式
+                onMounted(() => {
+                    generateRandomPattern();
+                    
+                    // 自动初始化音频
+                    setTimeout(initializeAudio, 1000);
+                });
+                
+                return {
+                    audioInitialized,
+					soundList,
+					activeSound,
+                    isPlaying,
+                    currentStep,
+                    currentBPM,
+                    bars,
+                    visualizerBars,
+                    showPresetLibrary,
+                    exportDuration,
+                    exportStatus,
+                    exportIcon,
+                    exportProgress,
+                    downloadLink,
+                    exportFileName,
+                    statusMessage,
+                    statusIcon,
+                    positionIndicator,
+                    instruments,
+                    currentPattern,
+                    drumPresets,
+                    totalSteps,
+                    initializeAudio,
+                    incrementBars,
+                    decrementBars,
+                    getStepLabel,
+                    toggleStep,
+                    togglePlayback,
+                    stopPlayback,
+                    updateBPM,
+                    clearPattern,
+                    generateRandomPattern,
+                    loadPreset,
+                    testAllSounds,
+                    exportToWAV
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

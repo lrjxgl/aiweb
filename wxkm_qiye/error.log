@@ -1,2 +1,0 @@
-[2025-06-27 22:42:45] session_start(): Cannot start session when headers already sent in E:\aiweb\wxkm_qiye\functions.php on line 33
-[2025-06-27 22:42:45] mysqli::prepare(): Couldn't fetch mysqli in E:\aiweb\wxkm_qiye\article_detail.php on line 183

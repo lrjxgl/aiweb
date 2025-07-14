@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>钢琴伴奏生成器-完全自定义版</title>
+  <script src="/js/vue2.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+      color: #ecf0f1;
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+    
+    header {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      padding: 25px;
+      text-align: center;
+      border-bottom: 3px solid rgba(236, 240, 241, 0.2);
+    }
+    
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .subtitle {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      color: #f1c40f;
+    }
+    
+    .content {
+      padding: 25px;
+    }
+    
+    .control-panel {
+      background: rgba(52, 73, 94, 0.8);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .group {
+      margin-bottom: 25px;
+    }
+    
+    h2 {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(236, 240, 241, 0.2);
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 5px;
+      background: rgba(236, 240, 241, 0.9);
+      font-size: 16px;
+      color: #2c3e50;
+      margin-top: 5px;
+    }
+    
+    button {
+      padding: 12px 24px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s;
+      width: 100%;
+      margin: 5px 0;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .play-btn {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+    }
+    
+    .play-btn:hover {
+      background: rgba(39, 174, 96, 1);
+    }
+    
+    .stop-btn {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    
+    .stop-btn:hover {
+      background: rgba(192, 57, 43, 1);
+    }
+    
+    .export-btn {
+      background: linear-gradient(135deg, #f1c40f, #f39c12);
+      color: #2c3e50;
+    }
+    
+    .export-btn:hover {
+      background: rgba(243, 156, 18, 1);
+    }
+    
+    .slider-container {
+      display: flex;
+      align-items: center;
+    }
+    
+    .slider {
+      flex-grow: 1;
+      margin: 0 15px;
+    }
+    
+    .value-display {
+      min-width: 40px;
+      text-align: center;
+      font-weight: bold;
+    }
+    
+    .status {
+      padding: 12px;
+      border-radius: 5px;
+      text-align: center;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    
+    .status.loading {
+      background: rgba(241, 196, 15, 0.3);
+    }
+    
+    .status.playing {
+      background: rgba(46, 204, 113, 0.3);
+    }
+    
+    .status.error {
+      background: rgba(231, 76, 60, 0.3);
+    }
+    
+    .status.recording {
+      background: rgba(155, 89, 182, 0.3);
+    }
+    
+    .example {
+      background: rgba(236, 240, 241, 0.1);
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 15px;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 20px;
+      border-top: 1px solid rgba(236, 240, 241, 0.1);
+      margin-top: 20px;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    .rhythm-legend {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+    }
+    
+    .rhythm-item {
+      display: flex;
+      align-items: center;
+      margin: 5px 10px;
+      font-size: 0.85rem;
+    }
+    
+    .rhythm-symbol {
+      font-weight: bold;
+      background: rgba(241, 196, 15, 0.3);
+      padding: 2px 5px;
+      border-radius: 3px;
+      margin-right: 5px;
+    }
+    
+    .custom-pattern-info {
+      background: rgba(155, 89, 182, 0.2);
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+    
+    .pattern-example {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(52, 152, 219, 0.2);
+      border-radius: 5px;
+    }
+    
+    .pattern-example h4 {
+      margin-bottom: 8px;
+      color: #3498db;
+    }
+    
+    .pattern-example ul {
+      padding-left: 20px;
+    }
+    
+    .pattern-example li {
+      margin-bottom: 5px;
+    }
+    
+    .pattern-example code {
+      background: rgba(0,0,0,0.2);
+      padding: 2px 5px;
+      border-radius: 3px;
+    }
+    
+    .custom-section {
+      background: rgba(155, 89, 182, 0.3);
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+      border-left: 4px solid #9b59b6;
+    }
+    
+    .custom-section h3 {
+      margin-bottom: 15px;
+      color: #f1c40f;
+    }
+    
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .pattern-card {
+      background: rgba(236, 240, 241, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .pattern-card:hover {
+      background: rgba(155, 89, 182, 0.4);
+      transform: translateY(-3px);
+    }
+    
+    .pattern-card h4 {
+      color: #f1c40f;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="container">
+      <header>
+        <h1>智能钢琴伴奏生成器</h1>
+        <div class="subtitle">完全自定义版 - 自由创作右手演奏方式</div>
+      </header>
+      
+      <div class="content">
+        <div class="control-panel">
+          <div class="group">
+            <h2>和弦输入</h2>
+            <div class="form-group">
+              <label for="chordInput">和弦序列（逗号分隔小节）:</label>
+              <textarea id="chordInput" v-model="chordInput" rows="4" placeholder="例如: C:maj F:maj, G:7 C:maj"></textarea>
+              <div class="example">
+                <div>格式: 根音:类型（如 C:maj, Am:min, G:7）</div>
+                <div>每小节用逗号分隔，小节内和弦用空格分隔</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="group">
+            <h2>节奏设置</h2>
+            <div class="form-group">
+              <label for="leftHandRhythm">左手节奏型:</label>
+              <input type="text" id="leftHandRhythm" v-model="leftHandRhythm" placeholder="例如: q1 q2 q3 q4">
+              <div class="example">
+                格式: [节奏类型][音阶序号][+号表示高八度]<br>
+                <div class="rhythm-legend">
+                  <div class="rhythm-item"><span class="rhythm-symbol">w</span>全音符</div>
+                  <div class="rhythm-item"><span class="rhythm-symbol">h</span>二分音符</div>
+                  <div class="rhythm-item"><span class="rhythm-symbol">q</span>四分音符</div>
+                  <div class="rhythm-item"><span class="rhythm-symbol">e</span>八分音符</div>
+                  <div class="rhythm-item"><span class="rhythm-symbol">s</span>十六分音符</div>
+                  <div class="rhythm-item"><span class="rhythm-symbol">.</span>附点（如 q1.）</div>
+                </div>
+                <div class="example">
+                  <strong>示例:</strong><br>
+                  C大调: "q1 q2 q3 q4" → C D E F<br>
+                  Dm小调: "q1 q2 q3 q4" → D E F G<br>
+                  高八度: "q1 q2 q3 q1+" → C D E C(高八度)
+                </div>
+              </div>
+            </div>
+            
+            <div class="custom-section">
+              <h3>右手自定义演奏方式</h3>
+              <div class="form-group">
+                <label for="customPattern">演奏模式:</label>
+                <input type="text" id="customPattern" v-model="customPattern" placeholder="例如: (1 3) 5 (1 8) 或 1 3 5 8">
+              </div>
+              
+              <div class="custom-pattern-info">
+                <strong>自定义模式说明:</strong>
+                <p>使用括号表示柱式和弦：<code>(1 3)</code> 表示同时弹奏根音和三音</p>
+                <p>数字代表和弦中的音符位置：</p>
+                <ul>
+                  <li>1 = 根音</li>
+                  <li>3 = 三音</li>
+                  <li>5 = 五音</li>
+                  <li>7 = 七音</li>
+                  <li>8 = 高八度根音</li>
+                  <li>2 = 九音（根音上方大二度）</li>
+                </ul>
+              </div>
+              
+              <div class="pattern-grid">
+                <div class="pattern-card" @click="applyPattern('(1 3) 5 (1 8)')">
+                  <h4>基本模式</h4>
+                  <div>(1 3) 5 (1 8)</div>
+                </div>
+                <div class="pattern-card" @click="applyPattern('(1 5) 3 8')">
+                  <h4>低音模式</h4>
+                  <div>(1 5) 3 8</div>
+                </div>
+                <div class="pattern-card" @click="applyPattern('(1 3 5) (1 8)')">
+                  <h4>和弦模式</h4>
+                  <div>(1 3 5) (1 8)</div>
+                </div>
+                <div class="pattern-card" @click="applyPattern('1 3 5 8')">
+                  <h4>分解和弦</h4>
+                  <div>1 3 5 8</div>
+                </div>
+                <div class="pattern-card" @click="applyPattern('(1 3) (5 8)')">
+                  <h4>双音模式</h4>
+                  <div>(1 3) (5 8)</div>
+                </div>
+                <div class="pattern-card" @click="applyPattern('1 (3 5) 8')">
+                  <h4>混合模式</h4>
+                  <div>1 (3 5) 8</div>
+                </div>
+              </div>
+              
+              <div class="pattern-example">
+                <h4>高级模式示例:</h4>
+                <ul>
+                  <li><code>(1 3) 5 (1 8)</code> - 先同时弹根音和三音，然后五音，最后同时弹根音和高八度根音</li>
+                  <li><code>(1 5) 3 8</code> - 同时弹根音和五音，然后三音，最后高八度根音</li>
+                  <li><code>(1 3 5) (1 8)</code> - 同时弹根音、三音和五音，然后同时弹根音和高八度根音</li>
+                  <li><code>1 3 5 8</code> - 依次弹奏根音、三音、五音和高八度根音</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+              <label for="instrument">乐器</label>
+              <select id="instrument" v-model="instrument">
+                  <option v-for="(inst, index) in instruments" :key="index" :value="index">{{ inst.name }}</option>
+              </select>
+          </div>
+          <div class="group">
+            <h2>速度与调性</h2>
+            <div class="slider-container">
+              <span>慢</span>
+              <input type="range" min="40" max="240" v-model="tempo" class="slider">
+              <span>快</span>
+              <div class="value-display">{{ tempo }} BPM</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="repeatCount">重复次数:</label>
+              <input type="number" min="1" max="10" v-model="repeatCount">
+              <div class="example">设置序列重复演奏的次数</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="keySignature">调性:</label>
+              <select id="keySignature" v-model="keySignature">
+                <option value="C">C大调</option>
+                <option value="G">G大调</option>
+                <option value="D">D大调</option>
+                <option value="A">A大调</option>
+                <option value="E">E大调</option>
+                <option value="B">B大调</option>
+                <option value="F">F大调</option>
+                <option value="Bb">降B大调</option>
+                <option value="Eb">降E大调</option>
+                <option value="Ab">降A大调</option>
+                <option value="Db">降D大调</option>
+                <option value="Gb">降G大调</option>
+                <option value="Am">A小调</option>
+                <option value="Em">E小调</option>
+                <option value="Bm">B小调</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <button class="play-btn" @click="parseAndPlay" :disabled="isPlaying || loading">
+              {{ loading ? '加载中...' : '播放伴奏' }}
+            </button>
+            <button class="stop-btn" @click="stopPlayback" :disabled="!isPlaying">
+              停止播放
+            </button>
+            
+            <button class="export-btn" @click="exportBackgroundWAV" :disabled="loading || isPlaying || isGenerating">
+              导出WAV音频
+            </button>
+          </div>
+          
+          <div class="form-group" v-show="statusMessage">
+            <div :class="['status', statusClass]">{{ statusMessage }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <p>钢琴伴奏生成器 v15.0 | 完全自定义版 | 自由创作你的伴奏风格</p>
+      </footer>
+    </div>
+  </div>
+  
+  <script>
+    // 音频上下文管理
+    let audioContext;
+    if (window.AudioContext) {
+      audioContext = new AudioContext();
+    } else if (window.webkitAudioContext) {
+      audioContext = new webkitAudioContext();
+    }
+    
+    // 全局常量
+    const BASE_URL = '/asset/FatBoy/';
+    const INSTRUMENT_SOURCES = {
+          piano: {
+            name: '钢琴',
+            baseUrl: 'acoustic_grand_piano-mp3',
+            
+          },
+          guitar: {
+            name: '吉他',
+            baseUrl: 'acoustic_guitar_steel-mp3',
+             
+          },
+          bass: {
+            name: '贝斯',
+            baseUrl: 'electric_bass_finger-mp3',
+            
+          }
+          
+        };
+    new Vue({
+      el: '#app',
+      data: {
+        chordInput: 'C:maj, F:maj, G:7, C:maj',
+        leftHandRhythm: 'q1 q2 q3 q4',
+        customPattern: '(1 3) 5 (1 8)',
+        tempo: 120,
+        keySignature: 'C',
+        isPlaying: false,
+        loading: false,
+        statusMessage: '',
+        statusClass: '',
+        chordSequence: [],
+        repeatCount: 1,
+        audioBlob: null,
+        isGenerating: false,
+        exportProgress: 0,
+        noteOffsets: {
+          maj: [0, 4, 7], // 大三和弦
+          min: [0, 3, 7], // 小三和弦
+          '7': [0, 4, 7, 10], // 属七和弦
+          maj7: [0, 4, 7, 11], // 大七和弦
+          min7: [0, 3, 7, 10], // 小七和弦
+          dim: [0, 3, 6], // 减三和弦
+          dim7: [0, 3, 6, 9] // 减七和弦
+        },
+        rhythmNotations: {
+          'w': 4,    // 全音符
+          'h': 2,    // 二分音符
+          'q': 1,    // 四分音符
+          'e': 0.5,  // 八分音符
+          's': 0.25, // 十六分音符
+          't': 0.125 // 三十二分音符
+        },
+        keyToNoteName: {
+          C: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+          G: ['G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#'],
+          D: ['D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#'],
+          A: ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'],
+          E: ['E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#'],
+          B: ['B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#'],
+          F: ['F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E'],
+          Bb: ['A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A'],
+          Eb: ['D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D'],
+          Ab: ['G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G'],
+          Db: ['C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C'],
+          Gb: ['F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F'],
+          Am: ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'],
+          Em: ['E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#'],
+          Bm: ['B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#']
+        },
+		instruments:INSTRUMENT_SOURCES,
+		selectedInstrument:INSTRUMENT_SOURCES,
+		instrument: 'piano',
+		activeSources:[],
+        soundBuffers: {},
+        startTime: 0,
+        nextPlayTime: 0,
+        
+        playbackTimer: null
+      },
+	  watch:{
+		instrument(n,o){
+			this.soundBuffers = {};
+			this.instrument=n;
+		}  
+	  },
+      methods: {
+        // 应用预设模式
+        applyPattern(pattern) {
+          this.customPattern = pattern;
+          this.statusMessage = `已应用模式: ${pattern}`;
+          setTimeout(() => this.statusMessage = '', 2000);
+        },
+        
+        // 解析和弦输入
+        parseChordInput() {
+          this.chordSequence = [];
+          
+          // 按逗号分隔小节
+          const measures = this.chordInput.split(',').map(measure => measure.trim());
+          
+          measures.forEach((measure, measureIndex) => {
+            // 每小节内按空格分隔和弦
+            const chords = measure.split(/\s+/).filter(chord => chord);
+            
+            if (chords.length === 0) return;
+            
+            // 每个和弦的持续时间（平分小节）
+            const chordDuration = 4 / chords.length;
+            
+            chords.forEach((chord, chordIndex) => {
+              // 解析和弦符号（例如 C:maj）
+              const parts = chord.split(':');
+              if (parts.length < 2) return;
+              
+              const [root, type] = parts;
+              const chordData = {
+                root: root,
+                type: type,
+                measure: measureIndex,
+                position: chordIndex,
+                duration: chordDuration,
+                beatOffset: chordIndex * chordDuration
+              };
+              
+              this.chordSequence.push(chordData);
+            });
+          });
+          
+          this.statusMessage = `解析成功: ${this.chordSequence.length}个和弦`;
+          this.statusClass = '';
+        },
+        
+        // 生成和弦音符
+        generateChordNotes(chord) {
+          // 获取调性对应的音符名称
+          const noteNames = this.keyToNoteName[this.keySignature] || this.keyToNoteName.C;
+          
+          // 找出根音位置
+          const rootIndex = noteNames.findIndex(n => n.replace('b', '') === chord.root.replace('b', ''));
+          if (rootIndex === -1) return [];
+          
+          // 获取和弦音程
+          const intervals = this.noteOffsets[chord.type] || this.noteOffsets.maj;
+          
+          // 生成所有音符（科学音高记号）
+          const notes = intervals.map(interval => {
+            const noteIndex = (rootIndex + interval) % 12;
+            const octaveAdjustment = Math.floor((rootIndex + interval) / 12);
+            
+            // 左手在低八度 (C3区域)
+            const leftHandOctave = 2 + octaveAdjustment;
+            const leftHandNote = `${noteNames[noteIndex]}${leftHandOctave}`;
+            
+            // 右手在高八度 (C5区域)
+            const rightHandOctave = 4 + octaveAdjustment;
+            const rightHandNote = `${noteNames[noteIndex]}${rightHandOctave}`;
+            
+            return {
+              left: leftHandNote,
+              right: rightHandNote,
+              noteName: noteNames[noteIndex],
+              octave: leftHandOctave
+            };
+          });
+          
+          return notes;
+        },
+        
+        // 加载音频文件
+        async loadAudioFile(note) {
+          // 如果已经加载过，直接返回
+          if (this.soundBuffers[note]) {
+            return this.soundBuffers[note];
+          }
+          
+          // 创建新的音频源
+          try {
+            if(note.match("C#")){
+                note=note.replace("C#","Db");
+            }else if(note.match("D#")){
+                note=note.replace("D#","Eb");
+            }else if(note.match("E#")){
+                note=note.replace("E#","Fb");
+            }else if(note.match("F#")){
+                note=note.replace("F#","Gb");
+            }else if(note.match("G#")){
+                note=note.replace("G#","Ab");
+            }else if(note.match("A#")){
+                note=note.replace("A#","Bb");
+            }else if(note.match("B#")){
+                    note=note.replace("B#","Cb");
+            }  
+            const response = await fetch(`${BASE_URL}${INSTRUMENT_SOURCES[this.instrument].baseUrl}/${note}.mp3`);
+            if (!response.ok) throw new Error(`无法加载音频: ${note}.mp3`);
+            
+            const audioData = await response.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(audioData);
+            
+            this.soundBuffers[note] = audioBuffer;
+            return audioBuffer;
+          } catch (error) {
+            console.error('音频加载错误:', error);
+            return null;
+          }
+        },
+        
+        // 播放单个音符
+        async playNote(note, octave, hand, startTime, duration) {
+          if (!audioContext) return;
+          if(!this.isPlaying) return false;
+          // 构建完整的音符名（例如 C4）
+          const fullNote = note + octave;
+          
+          const buffer = await this.loadAudioFile(fullNote);
+          if (!buffer) return;
+          
+          // 创建音频节点
+          const source = audioContext.createBufferSource();
+          source.buffer = buffer;
+          
+          // 创建增益节点（音量控制）
+          const gainNode = audioContext.createGain();
+          
+          // 淡入淡出处理
+          gainNode.gain.setValueAtTime(0, startTime);
+          gainNode.gain.linearRampToValueAtTime(0.7, startTime + 0.05);
+          gainNode.gain.linearRampToValueAtTime(0.7, startTime + duration - 0.05);
+          gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+          
+          // 连接音频节点
+          source.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          // 安排播放时间
+          source.start(startTime);
+          
+          // 安排在结束时间停止
+          source.stop(startTime + duration);
+          // 添加到活动源数组
+            this.activeSources.push(source);
+            
+            // 设置结束事件
+            source.onended = () => {
+              // 从活动源数组中移除
+              const index = this.activeSources.indexOf(source);
+              if (index !== -1) {
+                this.activeSources.splice(index, 1);
+              }
+            };
+          return source;
+        },
+        
+        // 解析节奏单元（支持音符序列）
+        parseRhythmUnits() {
+          const rhythmUnits = this.leftHandRhythm.split(' ').filter(n => n.trim());
+          const units = [];
+          
+          rhythmUnits.forEach(unit => {
+            // 使用正则表达式解析节奏和音符
+            const match = unit.match(/([a-z.]+)?(\d+)(\+*)/i);
+            if (!match) return;
+            
+            const rhythmType = match[1] || 'q'; // 默认四分音符
+            const noteDegree = parseInt(match[2]);
+            const octaveMod = match[3] ? match[3].length : 0; // +号数量
+            
+            // 检查是否有附点
+            let hasDot = false;
+            let cleanRhythm = rhythmType;
+            
+            if (rhythmType.includes('.')) {
+              hasDot = true;
+              cleanRhythm = rhythmType.replace('.', '');
+            }
+            
+            // 获取基本音符值
+            const baseDuration = this.rhythmNotations[cleanRhythm] || 1;
+            
+            // 计算实际时长
+            let duration = baseDuration;
+            if (hasDot) duration *= 1.5;
+            
+            units.push({
+              notation: unit,
+              rhythm: cleanRhythm,
+              noteDegree: noteDegree,
+              octaveMod: octaveMod,
+              duration: duration
+            });
+          });
+          
+          return units;
+        },
+        
+        // 计算和弦持续时长（秒）
+        getChordDuration(chord) {
+          const quarterNoteDuration = 60 / this.tempo; // 四分音符持续时间（秒）
+          return chord.duration * quarterNoteDuration; // 根据小节占比计算时长
+        },
+        
+        // 解析自定义模式（支持括号表示柱式和弦）
+        parseCustomPattern(patternStr) {
+          // 使用正则表达式匹配括号内的组或单个数字
+          const pattern = [];
+          const regex = /(\([^)]+\)|\d+)/g;
+          let match;
+          
+          while ((match = regex.exec(patternStr)) !== null) {
+            const token = match[0];
+            
+            if (token.startsWith('(')) {
+              // 括号内的柱式和弦组
+              const group = token.slice(1, -1).split(/\s+/).filter(x => x).map(x => parseInt(x));
+              if (group.length > 0) {
+                pattern.push(group);
+              }
+            } else {
+              // 单个音符
+              const num = parseInt(token);
+              if (!isNaN(num)) {
+                pattern.push([num]); // 作为单音符数组
+              }
+            }
+          }
+          
+          return pattern.length > 0 ? pattern : [[1], [3], [5], [8]];
+        },
+        
+        // 播放和弦
+        async playChord(chord, chordNotes, startTime) {
+          // 计算每个和弦的持续时间（秒）
+          const duration = this.getChordDuration(chord);
+          
+          // 1. 处理左手节奏型
+          const rhythmUnits = this.parseRhythmUnits();
+          
+          if (rhythmUnits.length === 0) {
+            this.statusMessage = '错误: 左手节奏型为空或格式错误';
+            this.statusClass = 'error';
+            return duration;
+          }
+          
+          // 计算总的节奏单元时长倍率（用于确定每个单元的时长）
+          let totalDuration = 0;
+          rhythmUnits.forEach(unit => {
+            totalDuration += unit.duration;
+          });
+          
+          const scaleFactor = duration / totalDuration;
+          
+          // 当前时间指针
+          let currentTime = startTime;
+          
+          // 播放左手节奏型
+          for (let i = 0; i < rhythmUnits.length; i++) {
+            const rhythm = rhythmUnits[i];
+            const noteDuration = rhythm.duration * scaleFactor;
+            
+            // 获取音符名称
+            const noteName = this.getLeftHandNote(chord, rhythm.noteDegree, rhythm.octaveMod);
+            if (noteName) {
+              // 播放左手音符（固定在低八度区域）
+              await this.playNote(noteName.note, noteName.octave, 'left', currentTime, noteDuration);
+            }
+            
+            // 移动时间指针
+            currentTime += noteDuration;
+          }
+          
+          // 2. 处理右手部分
+          const pattern = this.parseCustomPattern(this.customPattern);
+          const groupCount = pattern.length;
+          const groupDuration = duration / groupCount;
+          
+          // 自定义模式 - 支持柱式和弦
+          for (let i = 0; i < groupCount; i++) {
+            const group = pattern[i];
+            const groupStartTime = startTime + (i * groupDuration );//groupDuration *0.8
+            
+            // 为组内每个音符创建播放任务
+            for (const degree of group) {
+              let noteIndex = 0;
+              let octaveOffset = 0;
+              
+              // 解析音符位置
+              if (degree === 1) noteIndex = 0;
+              else if (degree === 3) noteIndex = 1;
+              else if (degree === 5) noteIndex = 2;
+              else if (degree === 7) noteIndex = 3;
+              else if (degree === 8) {
+                noteIndex = 0;
+                octaveOffset = 1; // 高八度
+              }
+              else if (degree === 2) {
+                // 九音（根音上方大二度）
+                noteIndex = 0;
+                octaveOffset = 1;
+              }
+              else {
+                noteIndex = degree % chordNotes.length;
+              }
+              
+              if (noteIndex >= chordNotes.length) noteIndex = 0;
+              
+              const noteData = chordNotes[noteIndex];
+              const noteName = noteData.right.slice(0, -1);
+              const baseOctave = parseInt(noteData.right.slice(-1));
+              const finalOctave = baseOctave + octaveOffset;
+              
+              await this.playNote(noteName, finalOctave, 'right', groupStartTime, groupDuration);
+            }
+          }
+          
+          return duration;
+        },
+        
+        // 获取左手音符（根据和弦根音和音阶序号）
+        getLeftHandNote(chord, degree, octaveMod) {
+          const noteNames = this.keyToNoteName[this.keySignature] || this.keyToNoteName.C;
+          
+          // 找出根音位置
+          const rootIndex = noteNames.findIndex(n => n.replace('b', '') === chord.root.replace('b', ''));
+          if (rootIndex === -1) return null;
+          
+          // 大调音阶的半音偏移
+          const majorScaleOffsets = [0, 2, 4, 5, 7, 9, 11];
+          
+          // 计算音符偏移（0-6对应1-7级）
+          const degreeIndex = (degree - 1) % 7;
+          const semitoneOffset = majorScaleOffsets[degreeIndex];
+          
+          // 计算最终音符位置
+          const noteIndex = (rootIndex + semitoneOffset) % 12;
+          const octaveAdjustment = Math.floor((rootIndex + semitoneOffset) / 12);
+          
+          // 基础八度 + 八度调整 + 额外八度
+          const baseOctave = 3;
+          const finalOctave = baseOctave + octaveAdjustment + octaveMod;
+          
+          return {
+            note: noteNames[noteIndex],
+            octave: finalOctave
+          };
+        },
+        
+        // 解析并播放序列
+        async parseAndPlay() {
+          if (this.isPlaying) return;
+          
+          this.statusMessage = '解析和弦序列...';
+          this.statusClass = 'loading';
+          
+          try {
+            // 解析和弦序列
+            this.parseChordInput();
+            
+            if (this.chordSequence.length === 0) {
+              this.statusMessage = '错误: 未发现有效的和弦';
+              this.statusClass = 'error';
+              return;
+            }
+            
+            this.loading = true;
+            this.statusMessage = '加载音源中...';
+            
+            // 预加载所有需要使用的音源
+            const uniqueNotes = new Set();
+            this.chordSequence.forEach(chord => {
+              const notes = this.generateChordNotes(chord);
+              notes.forEach(noteData => {
+                // 左手部分
+                const rhythmUnits = this.parseRhythmUnits();
+                rhythmUnits.forEach(unit => {
+                  const note = this.getLeftHandNote(chord, unit.noteDegree, unit.octaveMod);
+                  if (note) {
+                    uniqueNotes.add(`${note.note}${note.octave}`);
+                  }
+                });
+                
+                // 右手部分
+                uniqueNotes.add(noteData.right);
+                
+                // 自定义模式可能的高八度音符
+                uniqueNotes.add(`${noteData.right.slice(0, -1)}${parseInt(noteData.right.slice(-1)) + 1}`);
+              });
+            });
+            
+            // 异步加载所有音频文件
+            await Promise.all(
+              Array.from(uniqueNotes).map(note => this.loadAudioFile(note))
+            );
+            
+            this.statusMessage = '开始播放...';
+            this.statusClass = 'playing';
+            this.isPlaying = true;
+            this.loading = false;
+            
+            // 重置计时器
+            this.startTime = audioContext.currentTime;
+            this.nextPlayTime = this.startTime;
+            
+            // 开始播放序列（带重复）
+            this.playRepeatedSequence();
+          } catch (error) {
+            console.error('播放失败:', error);
+            this.statusMessage = '播放失败: ' + error.message;
+            this.statusClass = 'error';
+            this.isPlaying = false;
+            this.loading = false;
+          }
+        },
+        
+        // 播放重复序列
+        async playRepeatedSequence() {
+          // 计算完整序列总时长
+          let sequenceDuration = 0;
+          this.chordSequence.forEach(chord => {
+            sequenceDuration += this.getChordDuration(chord);
+          });
+          
+          // 创建播放计划
+          const playTasks = [];
+          
+          for (let repeat = 0; repeat < this.repeatCount; repeat++) {
+            let currentTime = this.startTime + (repeat * sequenceDuration);
+            
+            for (let i = 0; i < this.chordSequence.length; i++) {
+              const chord = this.chordSequence[i];
+              const chordNotes = this.generateChordNotes(chord);
+              
+              if (chordNotes.length === 0) continue;
+              
+              // 安排和弦播放任务
+              playTasks.push({
+                chord: chord,
+                notes: chordNotes,
+                startTime: currentTime
+              });
+              
+              // 更新当前时间
+              currentTime += this.getChordDuration(chord);
+            }
+          }
+          
+          // 执行所有播放任务
+          for (const task of playTasks) {
+            if (!this.isPlaying) break;
+            
+            // 播放当前和弦
+            const chordDuration = await this.playChord(
+              task.chord, 
+              task.notes, 
+              task.startTime
+            );
+            
+            // 更新当前播放时间
+            this.nextPlayTime = task.startTime + chordDuration;
+          }
+          
+          // 播放完成
+          if (this.isPlaying) {
+            //this.stopPlayback();
+          }
+        },
+        
+        // 后台导出WAV音频
+       async exportBackgroundWAV() {
+         this.isGenerating = true;
+         this.exportProgress = 0;
+         this.statusMessage = '正在生成音频文件...';
+         this.statusClass = 'loading';
+         
+         try {
+           // 解析和弦序列
+           this.parseChordInput();
+           
+           if (this.chordSequence.length === 0) {
+             throw new Error('没有有效的和弦序列');
+           }
+           
+           // 计算完整序列总时长（秒）
+           let sequenceDuration = 0;
+           this.chordSequence.forEach(chord => {
+             sequenceDuration += this.getChordDuration(chord);
+           });
+           
+           // 计算总时长（包括重复）
+           const totalDuration = sequenceDuration * this.repeatCount;
+           const sampleRate = 44100;
+           const totalSamples = Math.ceil(totalDuration * sampleRate);
+           
+           // 创建离线的AudioContext
+           const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(
+             2, // 声道数
+             totalSamples,
+             sampleRate
+           );
+           
+           // 预加载离线音频
+           const buffers = {};
+           const uniqueNotes = new Set();
+           
+           // 收集所有音符
+           this.chordSequence.forEach(chord => {
+             const chordNotes = this.generateChordNotes(chord);
+             
+             // 左手音符
+             const rhythmUnits = this.parseRhythmUnits();
+             rhythmUnits.forEach(unit => {
+               const note = this.getLeftHandNote(chord, unit.noteDegree, unit.octaveMod);
+               if (note) {
+                 uniqueNotes.add(`${note.note}${note.octave}`);
+               }
+             });
+             
+             // 右手音符
+             chordNotes.forEach(noteData => {
+               uniqueNotes.add(noteData.right);
+               uniqueNotes.add(`${noteData.right.slice(0, -1)}${parseInt(noteData.right.slice(-1)) + 1}`);
+             });
+           });
+           
+           // 加载所有音源
+           let loaded = 0;
+           const total = uniqueNotes.size;
+           for (let note of uniqueNotes) {
+             // 转换音符名称
+             if(note.match("C#")) note=note.replace("C#","Db");
+             else if(note.match("D#")) note=note.replace("D#","Eb");
+             else if(note.match("E#")) note=note.replace("E#","Fb");
+             else if(note.match("F#")) note=note.replace("F#","Gb");
+             else if(note.match("G#")) note=note.replace("G#","Ab");
+             else if(note.match("A#")) note=note.replace("A#","Bb");
+             else if(note.match("B#")) note=note.replace("B#","Cb");
+             
+             const response = await fetch(`${BASE_URL}${INSTRUMENT_SOURCES[this.instrument].baseUrl}/${note}.mp3`);
+             const audioData = await response.arrayBuffer();
+             buffers[note] = await offlineCtx.decodeAudioData(audioData);
+             loaded++;
+             this.exportProgress = (loaded / total) * 40;
+           }
+           
+           let currentTime = 0;
+           
+           for (let repeat = 0; repeat < this.repeatCount; repeat++) {
+             for (let i = 0; i < this.chordSequence.length; i++) {
+               const chord = this.chordSequence[i];
+               const chordNotes = this.generateChordNotes(chord);
+               const chordDuration = this.getChordDuration(chord);
+               const chordStartTime = currentTime;
+               
+               // 1. 调度左手音符
+               const rhythmUnits = this.parseRhythmUnits();
+               if (rhythmUnits.length > 0) {
+                 // 计算节奏单元的时间缩放因子
+                 const totalRhythmDuration = rhythmUnits.reduce((sum, unit) => sum + unit.duration, 0);
+                 const scaleFactor = chordDuration / totalRhythmDuration;
+                 
+                 // 调度每个节奏单元
+                 rhythmUnits.forEach(unit => {
+                   const unitDuration = unit.duration * scaleFactor;
+                   
+                   // 获取音符
+                   const note = this.getLeftHandNote(chord, unit.noteDegree, unit.octaveMod);
+                   
+                   if (note) {
+                     const fullNote = `${note.note}${note.octave}`;
+                     
+                     // 创建音频节点
+                     const source = offlineCtx.createBufferSource();
+                     source.buffer = buffers[fullNote];
+                     
+                     // 创建增益节点
+                     const gainNode = offlineCtx.createGain();
+                     source.connect(gainNode);
+                     gainNode.connect(offlineCtx.destination);
+                     
+                     // 设置音量曲线
+                     gainNode.gain.setValueAtTime(0, currentTime);
+                     gainNode.gain.linearRampToValueAtTime(1.5, currentTime + 0.05);
+                     gainNode.gain.linearRampToValueAtTime(1.5, currentTime + unitDuration - 0.05);
+                     gainNode.gain.linearRampToValueAtTime(0, currentTime + unitDuration);
+                     
+                     // 调度播放
+                     source.start(currentTime);
+                     source.stop(currentTime + unitDuration);
+                   }
+                   
+                   // 移动时间指针
+                   currentTime += unitDuration;
+                 });
+                 
+                 // 重置时间指针到和弦开始位置用于右手音符调度
+                 currentTime = chordStartTime;
+               }
+               
+               // 2. 调度右手音符 - 修复部分
+               if (chordNotes.length > 0) {
+                 // 解析自定义模式
+                 const pattern = this.parseCustomPattern(this.customPattern);
+                 const groupCount = pattern.length;
+                 
+                 if (groupCount > 0) {
+                   const groupDuration = chordDuration / groupCount;
+                   
+                   // 调度每个组
+                   for (let i = 0; i < groupCount; i++) {
+                     const group = pattern[i];
+                     const groupStartTime = chordStartTime + (i * groupDuration);
+                     
+                     // 为组内每个音符创建播放任务
+                     for (const degree of group) {
+                       let noteIndex = 0;
+                       let octaveOffset = 0;
+                       
+                       // 解析音符位置
+                       if (degree === 1) noteIndex = 0;
+                       else if (degree === 3) noteIndex = 1;
+                       else if (degree === 5) noteIndex = 2;
+                       else if (degree === 7) noteIndex = 3;
+                       else if (degree === 8) {
+                         noteIndex = 0;
+                         octaveOffset = 1; // 高八度
+                       }
+                       else if (degree === 2) {
+                         // 九音（根音上方大二度）
+                         noteIndex = 0;
+                         octaveOffset = 1;
+                       }
+                       else {
+                         noteIndex = degree % chordNotes.length;
+                       }
+                       
+                       // 确保noteIndex在有效范围内
+                       if (noteIndex < chordNotes.length) {
+                         const noteData = chordNotes[noteIndex];
+                         const noteName = noteData.right.slice(0, -1);
+                         const baseOctave = parseInt(noteData.right.slice(-1));
+                         const finalOctave = baseOctave + octaveOffset;
+                         const fullNote = `${noteName}${finalOctave}`;
+                         
+                         if (buffers[fullNote]) {
+                           const source = offlineCtx.createBufferSource();
+                           source.buffer = buffers[fullNote];
+                           
+                           const gainNode = offlineCtx.createGain();
+                           source.connect(gainNode);
+                           gainNode.connect(offlineCtx.destination);
+                           
+                           // 设置音量曲线
+                           gainNode.gain.setValueAtTime(0, groupStartTime);
+                           gainNode.gain.linearRampToValueAtTime(1.5, groupStartTime + 0.05);
+                           gainNode.gain.linearRampToValueAtTime(1.5, groupStartTime + groupDuration - 0.05);
+                           gainNode.gain.linearRampToValueAtTime(0, groupStartTime + groupDuration);
+                           
+                           source.start(groupStartTime);
+                           source.stop(groupStartTime + groupDuration);
+                         }
+                       }
+                     }
+                   }
+                 }
+               }
+               
+               // 更新当前时间指针到和弦结束位置
+               currentTime = chordStartTime + chordDuration;
+               
+               // 更新进度
+               this.exportProgress = 40 + ((currentTime / totalDuration) * 60);
+             }
+           }
+           
+           // 渲染音频
+           const renderedBuffer = await offlineCtx.startRendering();
+           
+           // 将音频缓冲区转换为WAV
+           const wavBlob = this.audioBufferToWav(renderedBuffer);
+           
+           // 创建下载链接
+           const url = URL.createObjectURL(wavBlob);
+           const a = document.createElement('a');
+           a.style.display = 'none';
+           a.href = url;
+           a.download = `piano-accompaniment-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.wav`;
+           document.body.appendChild(a);
+           a.click();
+           
+           // 清理
+           setTimeout(() => {
+             document.body.removeChild(a);
+             URL.revokeObjectURL(url);
+           }, 60000);
+           
+           this.statusMessage = 'WAV文件已生成并开始下载';
+           this.statusClass = '';
+           this.isGenerating = false;
+           
+         } catch (error) {
+           console.error('导出失败:', error);
+           this.statusMessage = '导出失败: ' + error.message;
+           this.statusClass = 'error';
+           this.isGenerating = false;
+         }
+       },
+       
+        // 将AudioBuffer转换为WAV
+        audioBufferToWav(buffer) {
+          const numChannels = buffer.numberOfChannels;
+          const sampleRate = buffer.sampleRate;
+          const format = 1; // 1 = PCM
+          const bitDepth = 16;
+          
+          const bytesPerSample = bitDepth / 8;
+          const blockAlign = numChannels * bytesPerSample;
+          
+          // 计算数据大小
+          const dataSize = buffer.length * numChannels * bytesPerSample;
+          
+          // 创建WAV文件头部
+          const header = new ArrayBuffer(44);
+          const view = new DataView(header);
+          
+          // RIFF标识符
+          this.writeString(view, 0, 'RIFF');
+          // RIFF数据大小
+          view.setUint32(4, 36 + dataSize, true);
+          // WAVE标识符
+          this.writeString(view, 8, 'WAVE');
+          // fmt子块标识符
+          this.writeString(view, 12, 'fmt ');
+          // fmt子块大小
+          view.setUint32(16, 16, true);
+          // 音频格式（PCM）
+          view.setUint16(20, format, true);
+          // 声道数
+          view.setUint16(22, numChannels, true);
+          // 采样率
+          view.setUint32(24, sampleRate, true);
+          // 字节率
+          view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
+          // 块对齐
+          view.setUint16(32, numChannels * bytesPerSample, true);
+          // 位深度
+          view.setUint16(34, bitDepth, true);
+          // data子块标识符
+          this.writeString(view, 36, 'data');
+          // data子块大小
+          view.setUint32(40, dataSize, true);
+          
+          // 合并头部和音频数据
+          const wav = new Uint8Array(header.byteLength + dataSize);
+          wav.set(new Uint8Array(header), 0);
+          
+          // 写入PCM数据
+          const dataOffset = 44;
+          const interleaved = new Float32Array(buffer.length * numChannels);
+          
+          for (let i = 0; i < buffer.length; i++) {
+            for (let channel = 0; channel < numChannels; channel++) {
+              interleaved[i * numChannels + channel] = buffer.getChannelData(channel)[i];
+            }
+          }
+          
+          // 转换为16位PCM
+          const pcmData = new Int16Array(interleaved.length);
+          for (let i = 0; i < interleaved.length; i++) {
+            const val = Math.max(-1, Math.min(1, interleaved[i]));
+            pcmData[i] = val < 0 ? val * 0x8000 : val * 0x7FFF;
+          }
+          
+          // 写入WAV数据
+          wav.set(new Uint8Array(pcmData.buffer), dataOffset);
+          
+          return new Blob([wav], { type: 'audio/wav' });
+        },
+        
+        // 辅助函数：向DataView写入字符串
+        writeString(view, offset, string) {
+          for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+          }
+        },
+        
+        // 停止播放
+        stopPlayback() {
+          this.isPlaying = false;
+          
+          // 停止所有活动中的音频源
+          this.activeSources.forEach(source => {
+            try {
+              source.stop();
+              source.disconnect();
+            } catch (e) {
+              // 忽略已停止的源
+            }
+          });
+          
+          // 清空活动源数组
+          this.activeSources = [];
+          
+          // 清除播放定时器
+          if (this.playbackTimer) {
+            clearTimeout(this.playbackTimer);
+            this.playbackTimer = null;
+          }
+          
+          // 重置音频上下文
+          if (audioContext && audioContext.state !== 'closed') {
+            audioContext.close();
+            // 重新创建音频上下文
+            if (window.AudioContext) {
+              audioContext = new AudioContext();
+            } else if (window.webkitAudioContext) {
+              audioContext = new webkitAudioContext();
+            }
+          }
+          
+          this.statusMessage = '已停止';
+          this.statusClass = '';
+        },
+      },
+      beforeDestroy() {
+        this.stopPlayback();
+      }
+    });
+  </script>
+</body>
+</html>

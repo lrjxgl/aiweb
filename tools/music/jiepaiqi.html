@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>乡村老雷的节拍器</title>
+  <script src="/js/vue3.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      color: white;
+    }
+    
+    h1 {
+      font-size: 3.5rem;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+    
+    .metronome {
+      background: rgba(255, 255, 255, 0.93);
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+      padding: 40px;
+      width: 100%;
+      max-width: 600px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .bpm-display {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .bpm-value {
+      font-size: 5rem;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+    
+    .bpm-label {
+      font-size: 1.3rem;
+      color: #7f8c8d;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+    
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    button.play {
+      background: #2ecc71;
+      width: 100px;
+      height: 100px;
+      font-size: 1.8rem;
+    }
+    
+    button.stop {
+      background: #e74c3c;
+      width: 100px;
+      height: 100px;
+      font-size: 1.8rem;
+    }
+    
+    .bpm-control {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    
+    .bpm-slider {
+      width: 100%;
+      margin: 20px 0;
+      -webkit-appearance: none;
+      height: 12px;
+      border-radius: 10px;
+      background: linear-gradient(to right, #3498db, #2ecc71, #e74c3c);
+      outline: none;
+    }
+    
+    .bpm-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid #2c3e50;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .beats-display {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    
+    .beat {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ecf0f1;
+      margin: 0 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      color: #7f8c8d;
+      transition: all 0.1s ease;
+    }
+    
+    .beat.active {
+      background: #3498db;
+      transform: scale(1.2);
+      color: white;
+    }
+    
+    .beat.strong {
+      background: #e74c3c;
+      color: white;
+    }
+    
+    .beat.strong.active {
+      background: #c0392b;
+      transform: scale(1.3);
+    }
+    
+    .settings {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    
+    .setting {
+      flex: 1;
+      margin: 0 10px;
+    }
+    
+    h3 {
+      margin-bottom: 15px;
+      color: #2c3e50;
+      text-align: center;
+    }
+    
+    select, .beats-per-measure {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #ecf0f1;
+      background: white;
+      font-size: 1rem;
+      color: #2c3e50;
+      outline: none;
+      transition: border 0.3s;
+    }
+    
+    select:focus, .beats-per-measure:focus {
+      border-color: #3498db;
+    }
+    
+    .beats-per-measure {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background: #f8f9fa;
+    }
+    
+    .beat-option {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background: #ecf0f1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    
+    .beat-option.selected {
+      background: #3498db;
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .pendulum {
+      height: 100px;
+      position: relative;
+      margin: 30px 0;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .rod {
+      position: absolute;
+      width: 6px;
+      background: #2c3e50;
+      height: 100px;
+      top: 0;
+      border-radius: 3px;
+    }
+    
+    .weight {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: #e74c3c;
+      border-radius: 50%;
+      bottom: 0;
+  
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      color: white;
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+    
+    @media (max-width: 600px) {
+      .metronome {
+        padding: 25px;
+      }
+      
+      h1 {
+        font-size: 2.5rem;
+      }
+      
+      .bpm-value {
+        font-size: 4rem;
+      }
+      
+      .settings {
+        flex-direction: column;
+      }
+      
+      .setting {
+        margin: 10px 0;
+      }
+      
+      button {
+        width: 70px;
+        height: 70px;
+        margin: 0 10px;
+      }
+      
+      button.play, button.stop {
+        width: 85px;
+        height: 85px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="container">
+      <header>
+        <h1>乡村老雷的节拍器</h1>
+        <p class="subtitle">音乐练习的专业节奏工具</p>
+      </header>
+      
+      <main class="metronome">
+        <div class="bpm-display">
+          <div class="bpm-value">{{ bpm }}</div>
+          <div class="bpm-label">BPM</div>
+        </div>
+        
+        
+        
+        <div class="bpm-control">
+          <input 
+            type="range" 
+            class="bpm-slider" 
+            min="40" 
+            max="240" 
+            v-model="bpm"
+            
+          >
+          <div class="slider-labels">
+            <span>慢</span>
+            <span>速度</span>
+            <span>快</span>
+          </div>
+        </div>
+        
+        <div class="controls">
+          <button @click="decreaseBpm"  >
+            <i class="fas fa-minus"></i> 1
+          </button>
+          <button 
+            v-if="!isPlaying" 
+            class="play" 
+            @click="start"
+          >
+            <i class="fas fa-play"></i>
+          </button>
+          <button 
+            v-else 
+            class="stop" 
+            @click="stop"
+          >
+            <i class="fas fa-stop"></i>
+          </button>
+          <button @click="increaseBpm" >
+            <i class="fas fa-plus"></i>  1
+          </button>
+        </div>
+        
+        <div class="beats-display">
+          <div 
+            v-for="(beat, index) in beats" 
+            :key="index"
+            class="beat" 
+            :class="{
+              active: isPlaying && (currentBeat === index+1 || (currentBeat==0 && index==beatsPerMeasure-1) ), 
+               
+            }"
+          >
+            {{ index + 1 }}
+          </div>
+        </div>
+        
+        <div class="settings">
+          <div class="setting">
+            <h3>每小节拍数</h3>
+            <div class="beats-per-measure">
+              <div 
+                v-for="n in [2, 3, 4, 5, 6, 7,8]" 
+                :key="n"
+                class="beat-option" 
+                :class="{ selected: beatsPerMeasure === n }"
+                @click="beatsPerMeasure = n"
+              >
+                {{ n }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="setting" style="display: none;">
+            <h3>节拍音效</h3>
+            <select v-model="selectedSound">
+              <option value="click">标准节拍器</option>
+              <option value="wood">木鱼</option>
+              <option value="cowbell">牛铃</option>
+              <option value="hihat">踩镲</option>
+            </select>
+          </div>
+        </div>
+      </main>
+      
+      <footer class="footer">
+        <p>乡村老雷的节拍器</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, watch } = Vue;
+    
+    createApp({
+      setup() {
+        // 状态变量
+        const bpm = ref(120);
+        const isPlaying = ref(false);
+        const beatsPerMeasure = ref(4);
+        const currentBeat = ref(0);
+        const timer = ref(null);
+        const selectedSound = ref('click');
+        
+        // 计算属性
+        const beats = computed(() => Array(beatsPerMeasure.value).fill(0));
+        const beatInterval = computed(() => (60 / bpm.value) * 1000);
+        
+        // 声音对象
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let clickSoundBuffer = null;
+        let strongClickSoundBuffer = null;
+        
+        // 加载音频
+        const loadSound = async (url) => {
+          const response = await fetch(url);
+          const arrayBuffer = await response.arrayBuffer();
+          return audioContext.decodeAudioData(arrayBuffer);
+        };
+        
+        // 初始化声音
+        const initSounds = async () => {
+          clickSoundBuffer = await loadSound('/asset/Drum-Kit-JS/snare.wav');
+          strongClickSoundBuffer = await loadSound('/asset/Drum-Kit-JS/kick.wav');
+        };
+        
+        initSounds();
+        
+        // 播放声音
+        const playSound = (isStrongBeat) => {
+          if (!audioContext || !clickSoundBuffer) return;
+          
+          const source = audioContext.createBufferSource();
+          source.buffer = isStrongBeat ? strongClickSoundBuffer : clickSoundBuffer;
+          source.connect(audioContext.destination);
+          source.start();
+        };
+        
+        // 开始节拍器
+        const start = () => {
+          if (isPlaying.value) return;
+          
+          isPlaying.value = true;
+          currentBeat.value = 0;
+          playBeat();
+        };
+        
+        // 停止节拍器
+        const stop = () => {
+          isPlaying.value = false;
+          clearTimeout(timer.value);
+        };
+        
+        // 播放节拍
+        const playBeat = () => {
+          if (!isPlaying.value) return;
+          
+          // 播放声音（强拍或弱拍）
+          const isStrongBeat = currentBeat.value === 0;
+          playSound(isStrongBeat);
+          
+          // 更新当前节拍
+          currentBeat.value = (currentBeat.value + 1) % beatsPerMeasure.value;
+          
+          // 设置下一个节拍
+          timer.value = setTimeout(playBeat, beatInterval.value);
+        };
+        
+        // BPM控制方法
+        const increaseBpm = () => {
+          bpm.value = Math.min(bpm.value + 1, 240);
+        };
+        
+        const decreaseBpm = () => {
+          bpm.value = Math.max(bpm.value - 1, 40);
+        };
+        
+        // 当节拍数改变时重置当前节拍
+        watch(beatsPerMeasure, (newVal, oldVal) => {
+          if (isPlaying.value) {
+            currentBeat.value = 0;
+          }
+        });
+        
+        return {
+          bpm,
+          isPlaying,
+          beatsPerMeasure,
+          currentBeat,
+          selectedSound,
+          beats,
+          start,
+          stop,
+          increaseBpm,
+          decreaseBpm
+        };
+      }
+    }).mount('#app');
+  </script>
+  
+  <!-- Font Awesome for icons -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</body>
+</html>
