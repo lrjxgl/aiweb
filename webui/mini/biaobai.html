@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浪漫表白生成器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&family=Dancing+Script:wght@700&family=Pacifico&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Ma Shan Zheng', 'Dancing Script', cursive;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #ffa1d0, #ff8bcb, #ff69b4, #ff1493, #db7093);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* 背景装饰元素 - 爱心 */
+        .hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* 背景装饰元素 - 闪烁星星 */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+        
+        /* 内容容器 */
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 700px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 40px 50px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25), 0 0 50px rgba(255, 20, 147, 0.3) inset;
+            transform: translateY(30px);
+            opacity: 0;
+            animation: containerAppear 1.5s forwards 0.5s;
+            text-align: center;
+        }
+        
+        .title {
+            color: #ff3b8d;
+            font-size: 52px;
+            margin-bottom: 25px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            letter-spacing: 3px;
+            position: relative;
+            padding-bottom: 20px;
+            font-family: 'Pacifico', cursive;
+        }
+        
+        .title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 4px;
+            background: linear-gradient(to right, #ff69b4, #ff1493);
+            border-radius: 2px;
+            box-shadow: 0 2px 5px rgba(219, 112, 147, 0.5);
+        }
+        
+        .subtitle {
+            font-family: 'Zhi Mang Xing', cursive;
+            font-size: 32px;
+            color: #e50063;
+            margin: 25px 0;
+            animation: pulse 2s infinite alternate;
+        }
+        
+        .heart-icon {
+            display: inline-block;
+            color: #ff3b8d;
+            font-size: 38px;
+            animation: float 3s ease-in-out infinite;
+            margin: 0 12px;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+        }
+        
+        /* 表单样式 */
+        .form-container {
+            margin-top: 30px;
+        }
+        
+        .input-group {
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #ff3b8d;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: left;
+            padding-left: 18px;
+            font-family: 'Ma Shan Zheng', serif;
+        }
+        
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 18px 25px;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            font-size: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.4s;
+            color: #db7093;
+            box-shadow: 0 8px 20px rgba(255, 105, 180, 0.25);
+            font-family: 'Dancing Script', cursive;
+        }
+        
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border: 2px solid #ff69b4;
+            background: rgba(255, 255, 255, 0.95);
+            transform: scale(1.02);
+            box-shadow: 0 12px 25px rgba(255, 105, 180, 0.45);
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            display: inline-block;
+            padding: 18px 50px;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 2px;
+            margin: 15px;
+            font-family: 'Ma Shan Zheng', serif;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(45deg, #ff3b8d, #ff69b4);
+            box-shadow: 0 10px 20px rgba(255, 105, 180, 0.5);
+        }
+        
+        .copy-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.5);
+        }
+        
+        .back-btn {
+            background: linear-gradient(45deg, #5c7cfa, #748ffc);
+            box-shadow: 0 10px 20px rgba(92, 124, 250, 0.5);
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: all 0.6s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        /* 结果页面 */
+        #resultContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 1s;
+        }
+        
+        .result-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            padding: 50px 40px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35), 0 0 50px rgba(255, 20, 147, 0.2) inset;
+            transform: scale(0.8);
+            transition: transform 1s, opacity 1s;
+            text-align: center;
+        }
+        
+        .result-title {
+            color: #ff1493;
+            font-size: 48px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            font-family: 'Pacifico', cursive;
+            text-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .result-content {
+            font-size: 32px;
+            line-height: 1.8;
+            color: #db7093;
+            text-align: center;
+            margin: 40px 0;
+            font-family: 'Dancing Script', cursive;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            border-radius: 20px;
+            background: rgba(255, 182, 193, 0.1);
+        }
+        
+        .heart-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .result-heart {
+            font-size: 44px;
+            color: #ff3b8d;
+            animation: beat 1s infinite;
+            text-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 链接生成部分 */
+        .link-section {
+            margin: 40px auto;
+            max-width: 90%;
+            background: rgba(255, 233, 241, 0.6);
+            border-radius: 20px;
+            padding: 25px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .link-title {
+            font-size: 28px;
+            color: #ff1493;
+            margin-bottom: 20px;
+            font-family: 'Ma Shan Zheng', serif;
+        }
+        
+        .link-box {
+            background: white;
+            border: 2px solid #ffb7d5;
+            border-radius: 15px;
+            padding: 15px 20px;
+            font-size: 18px;
+            color: #ff3b8d;
+            margin: 20px 0;
+            text-align: left;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-family: 'Dancing Script', cursive;
+            display: flex;
+            align-items: center;
+        }
+        
+        .link-icon {
+            color: #ff69b4;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            background-color: #ff69b4;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px 16px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #ff69b4 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* 动画效果 */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+        
+        @keyframes containerAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-15px) scale(1.1);
+                filter: drop-shadow(0 5px 8px rgba(0,0,0,0.25));
+            }
+            100% {
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); text-shadow: 0 0 15px rgba(255, 20, 147, 0.7); }
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(0.7); }
+        }
+        
+        @keyframes heartFall {
+            0% {
+                opacity: 0;
+                transform: translateY(-100px) rotate(0deg);
+            }
+            15%, 85% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+        
+        @keyframes beat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+            
+            .title {
+                font-size: 42px;
+            }
+            
+            .subtitle {
+                font-size: 26px;
+            }
+            
+            .btn {
+                padding: 15px 35px;
+                font-size: 20px;
+            }
+            
+            .input-group label {
+                font-size: 22px;
+            }
+            
+            .input-group input, .input-group textarea {
+                font-size: 18px;
+                padding: 15px 20px;
+            }
+            
+            .result-card {
+                padding: 35px 25px;
+            }
+            
+            .result-title {
+                font-size: 40px;
+            }
+            
+            .result-content {
+                font-size: 28px;
+            }
+            
+            .link-section {
+                padding: 20px;
+            }
+            
+            .link-title {
+                font-size: 24px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title {
+                font-size: 36px;
+            }
+            
+            .subtitle {
+                font-size: 22px;
+            }
+            
+            .heart-icon {
+                font-size: 30px;
+            }
+            
+            .result-title {
+                font-size: 32px;
+            }
+            
+            .result-content {
+                font-size: 24px;
+            }
+            
+            .result-heart {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景爱心 -->
+    <div class="hearts" id="hearts"></div>
+    <div class="stars" id="stars"></div>
+    
+    <!-- 主容器 -->
+    <div class="container" id="container">
+        <h1 class="title">浪漫表白生成器</h1>
+        <p class="subtitle">将你的心意，说给最重要的人</p>
+        <div>
+            <span class="heart-icon">❤</span>
+            <span class="heart-icon">💖</span>
+            <span class="heart-icon">💗</span>
+        </div>
+        
+        <div class="form-container">
+            <div class="input-group">
+                <label for="name"><i class="fas fa-user"></i> 你心爱之人的名字：</label>
+                <input type="text" id="name" placeholder="输入你心中那个特别的名字">
+            </div>
+            
+            <div class="input-group">
+                <label for="message"><i class="fas fa-envelope"></i> 你的告白语：</label>
+                <textarea id="message" placeholder="写下你心底最真挚的情话..."></textarea>
+            </div>
+            
+            <button class="btn submit-btn" id="submitBtn">
+                <span>生成表白效果</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- 结果页面 -->
+    <div id="resultContainer">
+        <div class="result-card">
+            <h2 class="result-title">爱的告白</h2>
+            <div class="heart-row">
+                <div class="result-heart">❤</div>
+                <div class="result-heart">💖</div>
+                <div class="result-heart">💗</div>
+            </div>
+            <p class="result-content" id="displayText"></p>
+            
+            <!-- 链接生成部分 -->
+            <div class="link-section">
+                <div class="link-title">
+                    <i class="fas fa-link"></i> 分享你的表白
+                </div>
+                <p style="margin-bottom: 15px; color: #ff3b8d; font-family: 'Ma Shan Zheng', serif;">
+                    复制下方链接发送给TA，点击后即可看到你的表白效果！
+                </p>
+                <div class="link-box">
+                    <i class="fas fa-link link-icon"></i>
+                    <span id="shareLink">请先生成你的表白内容</span>
+                </div>
+                <div class="tooltip">
+                    <button class="btn copy-btn" id="copyBtn">
+                        <i class="fas fa-copy"></i> 复制链接
+                    </button>
+                    <span class="tooltiptext">链接已复制到剪贴板！</span>
+                </div>
+            </div>
+            
+            <button class="btn back-btn" id="backBtn">
+                <span>再次表白</span>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // 创建随机位置飘落的爱心
+        function createHearts() {
+            const heartsContainer = document.getElementById('hearts');
+            
+            // 创建30个爱心
+            for (let i = 0; i < 30; i++) {
+                const heart = document.createElement('div');
+                heart.innerHTML = getRandomHeart();
+                heart.style.position = 'absolute';
+                heart.style.fontSize = Math.random() * 40 + 20 + 'px';
+                heart.style.color = getRandomColor();
+                heart.style.top = '-50px';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.opacity = '0';
+                heart.style.animation = `heartFall ${Math.random() * 8 + 5}s linear infinite`;
+                heart.style.animationDelay = Math.random() * 5 + 's';
+                heart.style.zIndex = '1';
+                
+                heartsContainer.appendChild(heart);
+            }
+        }
+        
+        // 创建闪烁星星
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            
+            for (let i = 0; i < 40; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                star.style.width = Math.random() * 15 + 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 5 + 's';
+                star.style.opacity = '0';
+                
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // 随机获取爱心符号
+        function getRandomHeart() {
+            const hearts = ['❤', '🧡', '💛', '💚', '💙', '💜', '🖤', '💔', '❣', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'];
+            return hearts[Math.floor(Math.random() * hearts.length)];
+        }
+        
+        // 随机获取粉色系颜色
+        function getRandomColor() {
+            const colors = [
+                '#FFB6C1', '#FFC0CB', '#FF69B4', '#FF1493',
+                '#DB7093', '#C71585', '#FF7FAA', '#FF82AB',
+                '#FF6699', '#FF0099', '#FF3399', '#FF69B4',
+                '#FF6EC7', '#FC6C85', '#F88379', '#FF6B6B'
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // 显示表白结果
+        function showResult() {
+            const name = document.getElementById('name').value || "亲爱的";
+            const message = document.getElementById('message').value || "我喜欢你很久了，做我的爱人好吗？";
+            
+            // 组装告白文本
+            const finalText = `亲爱的 ${name},\n\n${message}`;
+            document.getElementById('displayText').textContent = finalText;
+            
+            // 生成分享链接
+            generateShareLink(name, message);
+            
+            // 展示结果页面
+            const container = document.getElementById('container');
+            const resultContainer = document.getElementById('resultContainer');
+            
+            // 隐藏主容器
+            container.style.opacity = '0';
+            container.style.pointerEvents = 'none';
+            
+            // 显示结果
+            resultContainer.style.opacity = '1';
+            resultContainer.style.pointerEvents = 'all';
+            
+            // 动画效果
+            setTimeout(() => {
+                document.querySelector('.result-card').style.transform = 'scale(1)';
+            }, 100);
+            
+            // 添加更多爱心特效
+            createHearts();
+        }
+        
+        // 生成分享链接
+        function generateShareLink(name, message) {
+            // 生成唯一标识符（简单版）
+            const uniqueId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+            
+            // 创建一个伪链接（实际中可使用服务器API生成真实链接）
+            const link = `${window.location.origin}${window.location.pathname}#${uniqueId}`;
+            
+            // 模拟存储（实际应用中需要服务器支持）
+            localStorage.setItem(`loveMessage_${uniqueId}`, JSON.stringify({name, message}));
+            
+            // 显示链接
+            document.getElementById('shareLink').textContent = link;
+        }
+        
+        // 复制分享链接
+        function copyShareLink() {
+            const linkText = document.getElementById('shareLink').textContent;
+            
+            // 使用Clipboard API复制文本
+            navigator.clipboard.writeText(linkText).then(() => {
+                // 显示复制成功提示（由CSS工具提示处理）
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动复制链接');
+            });
+        }
+        
+        // 返回到主页面
+        function goBack() {
+            const container = document.getElementById('container');
+            const resultContainer = document.getElementById('resultContainer');
+            
+            // 隐藏结果页面
+            resultContainer.style.opacity = '0';
+            resultContainer.style.pointerEvents = 'none';
+            document.querySelector('.result-card').style.transform = 'scale(0.8)';
+            
+            // 显示主容器
+            container.style.opacity = '1';
+            container.style.pointerEvents = 'all';
+            
+            // 清空输入
+            document.getElementById('name').value = '';
+            document.getElementById('message').value = '';
+        }
+        
+        // 检查哈希参数
+        function checkHashMessage() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const savedData = localStorage.getItem(`loveMessage_${hash}`);
+                if (savedData) {
+                    try {
+                        const {name, message} = JSON.parse(savedData);
+                        
+                        // 模拟提交效果
+                        document.getElementById('name').value = name;
+                        document.getElementById('message').value = message;
+                        showResult();
+                        
+                        // 滚动到顶部确保完全可见
+                        window.scrollTo(0, 0);
+                    } catch (e) {
+                        console.error('解析保存的数据失败:', e);
+                    }
+                }
+            }
+        }
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            createHearts();
+            createStars();
+            
+            // 添加事件监听器
+            document.getElementById('submitBtn').addEventListener('click', showResult);
+            document.getElementById('backBtn').addEventListener('click', goBack);
+            document.getElementById('copyBtn').addEventListener('click', copyShareLink);
+            
+            // 检查是否有哈希参数
+            setTimeout(checkHashMessage, 500);
+        };
+        
+        // 监听哈希变化
+        window.addEventListener('hashchange', checkHashMessage);
+    </script>
+</body>
+</html>
